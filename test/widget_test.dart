@@ -41,7 +41,7 @@ void main() {
       expect(find.text('Dot Hull Accessible App'), findsOneWidget);
 
       // Check for modern UI components
-      expect(find.byType(AnimatedContainer), findsOneWidget);
+      expect(find.byType(AnimatedContainer), findsWidgets);
       expect(find.byType(SingleChildScrollView), findsOneWidget);
 
       // Verify SVG logo presence and semantic labeling

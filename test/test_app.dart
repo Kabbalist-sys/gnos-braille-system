@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Test-only version of the main app that doesn't initialize Firebase
 class TestDotHullAccessibleApp extends StatelessWidget {
@@ -42,6 +43,60 @@ class MockHomeScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // Modern SVG Kabbalah Tree of Life Viewer with enhancements
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+              height: 340,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0x1F2196F3), // Colors.blue with 0.12 alpha
+                    Colors.white
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  Center(
+                    child: SvgPicture.asset(
+                      'assets/logo_kabbalah.svg',
+                      semanticsLabel: 'Kabbalah Tree of Life',
+                      fit: BoxFit.contain,
+                      width: 320,
+                      height: 320,
+                      // For testing, provide a placeholder if asset doesn't exist
+                      placeholderBuilder: (context) => Container(
+                        width: 320,
+                        height: 320,
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.image, size: 80),
+                      ),
+                    ),
+                  ),
+                  // Example: Floating info button for interactive tooltips
+                  const Positioned(
+                    right: 16,
+                    top: 16,
+                    child: Tooltip(
+                      message: 'Tap a Sefira for details',
+                      child: Icon(Icons.info_outline, color: Colors.blueGrey),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             // Hero section with logo
             AnimatedContainer(
               duration: const Duration(milliseconds: 500),
