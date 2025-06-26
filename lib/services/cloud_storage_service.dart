@@ -67,11 +67,12 @@ class CloudStorageService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
-    final doc = await _firestore.collection('translations').add(translation.toMap());
-    
+    final doc =
+        await _firestore.collection('translations').add(translation.toMap());
+
     // Update user statistics
     await _updateUserStats(translation);
-    
+
     return doc.id;
   }
 
@@ -115,7 +116,9 @@ class CloudStorageService {
           .map((doc) => {
                 'id': doc.id,
                 ...doc.data(),
-                'timestamp': (doc.data()['timestamp'] as Timestamp).toDate().toIso8601String(),
+                'timestamp': (doc.data()['timestamp'] as Timestamp)
+                    .toDate()
+                    .toIso8601String(),
               })
           .toList(),
     };
@@ -128,9 +131,10 @@ class CloudStorageService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
-    final fileName = 'translations_export_${DateTime.now().millisecondsSinceEpoch}.json';
+    final fileName =
+        'translations_export_${DateTime.now().millisecondsSinceEpoch}.json';
     final ref = _storage.ref().child('exports/${user.uid}/$fileName');
-    
+
     final uploadTask = ref.putData(
       Uint8List.fromList(utf8.encode(jsonData)),
       SettableMetadata(contentType: 'application/json'),
@@ -138,7 +142,7 @@ class CloudStorageService {
 
     final snapshot = await uploadTask;
     final downloadUrl = await snapshot.ref.getDownloadURL();
-    
+
     return downloadUrl;
   }
 
@@ -166,7 +170,7 @@ class CloudStorageService {
       final standard = data['standard'] ?? 'grade1';
       final language = data['language'] ?? 'en';
       final originalText = data['originalText'] ?? '';
-      
+
       standardCounts[standard] = (standardCounts[standard] ?? 0) + 1;
       languageCounts[language] = (languageCounts[language] ?? 0) + 1;
       totalCharacters += originalText.length as int;
@@ -175,17 +179,20 @@ class CloudStorageService {
     return {
       'totalTranslations': translations.length,
       'totalCharacters': totalCharacters,
-      'mostUsedStandard': standardCounts.isNotEmpty 
-          ? standardCounts.entries.reduce((a, b) => a.value > b.value ? a : b).key
+      'mostUsedStandard': standardCounts.isNotEmpty
+          ? standardCounts.entries
+              .reduce((a, b) => a.value > b.value ? a : b)
+              .key
           : 'grade1',
       'mostUsedLanguage': languageCounts.isNotEmpty
-          ? languageCounts.entries.reduce((a, b) => a.value > b.value ? a : b).key
+          ? languageCounts.entries
+              .reduce((a, b) => a.value > b.value ? a : b)
+              .key
           : 'en',
       'standardBreakdown': standardCounts,
       'languageBreakdown': languageCounts,
-      'averageCharactersPerTranslation': translations.isNotEmpty 
-          ? totalCharacters / translations.length 
-          : 0,
+      'averageCharactersPerTranslation':
+          translations.isNotEmpty ? totalCharacters / translations.length : 0,
       'memberSince': userData['createdAt'],
       'lastActivity': userData['lastLoginAt'],
     };
@@ -214,7 +221,8 @@ class CloudStorageService {
   }
 
   // Get favorite translations (most recently accessed)
-  Future<List<TranslationRecord>> getFavoriteTranslations({int limit = 10}) async {
+  Future<List<TranslationRecord>> getFavoriteTranslations(
+      {int limit = 10}) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
@@ -233,24 +241,26 @@ class CloudStorageService {
   // Update user statistics
   Future<void> _updateUserStats(TranslationRecord translation) async {
     final userDoc = _firestore.collection('users').doc(translation.userId);
-    
+
     await userDoc.update({
       'usage.translationsCount': FieldValue.increment(1),
-      'usage.totalCharactersTranslated': FieldValue.increment(translation.originalText.length),
+      'usage.totalCharactersTranslated':
+          FieldValue.increment(translation.originalText.length),
       'usage.favoriteStandard': translation.standard,
       'lastTranslationAt': FieldValue.serverTimestamp(),
     });
   }
 
   // Sync offline translations (for future offline support)
-  Future<void> syncOfflineTranslations(List<TranslationRecord> offlineTranslations) async {
+  Future<void> syncOfflineTranslations(
+      List<TranslationRecord> offlineTranslations) async {
     final batch = _firestore.batch();
-    
+
     for (final translation in offlineTranslations) {
       final doc = _firestore.collection('translations').doc();
       batch.set(doc, translation.toMap());
     }
-    
+
     await batch.commit();
   }
 
@@ -260,27 +270,27 @@ class CloudStorageService {
     if (user == null) return;
 
     final batch = _firestore.batch();
-    
+
     // Delete translations
     final translations = await _firestore
         .collection('translations')
         .where('userId', isEqualTo: user.uid)
         .get();
-    
+
     for (final doc in translations.docs) {
       batch.delete(doc.reference);
     }
-    
+
     // Delete user document
     batch.delete(_firestore.collection('users').doc(user.uid));
-    
+
     await batch.commit();
-    
+
     // Delete storage files
     try {
       final storageRef = _storage.ref().child('exports/${user.uid}');
       final listResult = await storageRef.listAll();
-      
+
       for (final item in listResult.items) {
         await item.delete();
       }

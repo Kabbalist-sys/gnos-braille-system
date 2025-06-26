@@ -72,7 +72,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             Expanded(
                               child: _buildStatCard(
                                 'Total Translations',
-                                _statistics!['totalTranslations']?.toString() ?? '0',
+                                _statistics!['totalTranslations']?.toString() ??
+                                    '0',
                                 Icons.translate,
                                 Colors.blue,
                               ),
@@ -81,7 +82,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             Expanded(
                               child: _buildStatCard(
                                 'Characters Translated',
-                                _formatNumber(_statistics!['totalCharacters'] ?? 0),
+                                _formatNumber(
+                                    _statistics!['totalCharacters'] ?? 0),
                                 Icons.text_fields,
                                 Colors.green,
                               ),
@@ -95,7 +97,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             Expanded(
                               child: _buildStatCard(
                                 'Languages Used',
-                                _statistics!['languagesUsed']?.length?.toString() ?? '0',
+                                _statistics!['languagesUsed']
+                                        ?.length
+                                        ?.toString() ??
+                                    '0',
                                 Icons.language,
                                 Colors.orange,
                               ),
@@ -104,7 +109,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             Expanded(
                               child: _buildStatCard(
                                 'Braille Standards',
-                                _statistics!['brailleStandardsUsed']?.length?.toString() ?? '0',
+                                _statistics!['brailleStandardsUsed']
+                                        ?.length
+                                        ?.toString() ??
+                                    '0',
                                 Icons.accessibility,
                                 Colors.purple,
                               ),
@@ -152,7 +160,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -216,7 +225,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _buildLanguageBreakdown() {
     final languages = _statistics!['languagesUsed'] as List<dynamic>? ?? [];
-    final languageStats = _statistics!['languageStats'] as Map<String, dynamic>? ?? {};
+    final languageStats =
+        _statistics!['languageStats'] as Map<String, dynamic>? ?? {};
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,7 +241,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           final percentage = _statistics!['totalTranslations'] > 0
               ? (count / _statistics!['totalTranslations'] * 100)
               : 0.0;
-          
+
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
@@ -245,7 +255,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   child: LinearProgressIndicator(
                     value: percentage / 100,
                     backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[400]!),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Colors.blue[400]!),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -259,8 +270,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildStandardBreakdown() {
-    final standards = _statistics!['brailleStandardsUsed'] as List<dynamic>? ?? [];
-    final standardStats = _statistics!['standardStats'] as Map<String, dynamic>? ?? {};
+    final standards =
+        _statistics!['brailleStandardsUsed'] as List<dynamic>? ?? [];
+    final standardStats =
+        _statistics!['standardStats'] as Map<String, dynamic>? ?? {};
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,7 +288,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           final percentage = _statistics!['totalTranslations'] > 0
               ? (count / _statistics!['totalTranslations'] * 100)
               : 0.0;
-          
+
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
@@ -289,7 +302,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   child: LinearProgressIndicator(
                     value: percentage / 100,
                     backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green[400]!),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Colors.green[400]!),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -364,8 +378,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildActivityTimeline() {
-    final recentActivity = _statistics!['recentActivity'] as List<dynamic>? ?? [];
-    
+    final recentActivity =
+        _statistics!['recentActivity'] as List<dynamic>? ?? [];
+
     if (recentActivity.isEmpty) {
       return const Text('No recent activity');
     }
@@ -374,7 +389,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       children: recentActivity.take(5).map<Widget>((activity) {
         final timestamp = DateTime.parse(activity['timestamp']);
         final ago = _getTimeAgo(timestamp);
-        
+
         return ListTile(
           leading: CircleAvatar(
             backgroundColor: Colors.purple[100],
@@ -493,7 +508,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String _getTimeAgo(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays}d ago';
     } else if (difference.inHours > 0) {

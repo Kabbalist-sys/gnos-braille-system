@@ -8,7 +8,7 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    
+
     return Drawer(
       child: Column(
         children: [
@@ -31,8 +31,8 @@ class AppDrawer extends StatelessWidget {
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.white,
-                      backgroundImage: user?.photoURL != null 
-                          ? NetworkImage(user!.photoURL!) 
+                      backgroundImage: user?.photoURL != null
+                          ? NetworkImage(user!.photoURL!)
                           : null,
                       child: user?.photoURL == null
                           ? Icon(
@@ -63,7 +63,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Navigation Items
           Expanded(
             child: ListView(
@@ -147,7 +147,7 @@ class AppDrawer extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Footer
           Container(
             padding: const EdgeInsets.all(16.0),
@@ -165,7 +165,8 @@ class AppDrawer extends StatelessWidget {
                       context: context,
                       builder: (context) => AlertDialog(
                         title: const Text('Sign Out'),
-                        content: const Text('Are you sure you want to sign out?'),
+                        content:
+                            const Text('Are you sure you want to sign out?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
@@ -184,8 +185,8 @@ class AppDrawer extends StatelessWidget {
                       await authService.signOut();
                       if (context.mounted) {
                         Navigator.pushNamedAndRemoveUntil(
-                          context, 
-                          '/login', 
+                          context,
+                          '/login',
                           (route) => false,
                         );
                       }
@@ -207,7 +208,7 @@ class AppDrawer extends StatelessWidget {
     String route,
   ) {
     final isCurrentRoute = ModalRoute.of(context)?.settings.name == route;
-    
+
     return ListTile(
       leading: Icon(
         icon,

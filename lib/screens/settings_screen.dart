@@ -29,7 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final userData = await _authService.getUserData();
       if (userData != null && userData['settings'] != null) {
@@ -60,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _saveSettings() async {
     setState(() => _isLoading = true);
-    
+
     final updatedSettings = {
       'brailleStandard': _selectedBrailleStandard,
       'language': _selectedLanguage,
@@ -124,14 +124,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'Braille Standard',
                         _selectedBrailleStandard,
                         [
-                          {'value': 'grade1', 'label': 'Grade 1 (Uncontracted)'},
+                          {
+                            'value': 'grade1',
+                            'label': 'Grade 1 (Uncontracted)'
+                          },
                           {'value': 'grade2', 'label': 'Grade 2 (Contracted)'},
                           {'value': 'grade3', 'label': 'Grade 3 (Shorthand)'},
                           {'value': 'computer', 'label': 'Computer Braille'},
                           {'value': 'math', 'label': 'Math/Science'},
                           {'value': 'music', 'label': 'Music Notation'},
                         ],
-                        (value) => setState(() => _selectedBrailleStandard = value),
+                        (value) =>
+                            setState(() => _selectedBrailleStandard = value),
                       ),
                       _buildDropdownSetting(
                         'Language',
@@ -185,13 +189,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'Notifications',
                         'Enable app notifications',
                         _notificationsEnabled,
-                        (value) => setState(() => _notificationsEnabled = value),
+                        (value) =>
+                            setState(() => _notificationsEnabled = value),
                       ),
                       _buildSwitchSetting(
                         'Auto-save Translations',
                         'Automatically save translations to history',
                         _autoSaveTranslations,
-                        (value) => setState(() => _autoSaveTranslations = value),
+                        (value) =>
+                            setState(() => _autoSaveTranslations = value),
                       ),
                     ],
                   ),
@@ -205,14 +211,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ListTile(
                         leading: const Icon(Icons.cloud_download),
                         title: const Text('Export Translation History'),
-                        subtitle: const Text('Download your translations as CSV'),
+                        subtitle:
+                            const Text('Download your translations as CSV'),
                         trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
                           Navigator.pushNamed(context, '/translation-history');
                         },
                       ),
                       ListTile(
-                        leading: const Icon(Icons.delete_sweep, color: Colors.red),
+                        leading:
+                            const Icon(Icons.delete_sweep, color: Colors.red),
                         title: const Text('Clear Translation History'),
                         subtitle: const Text('Delete all saved translations'),
                         trailing: const Icon(Icons.arrow_forward_ios),
@@ -329,7 +337,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: currentValue,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
               items: options.map((option) {
                 return DropdownMenuItem<String>(

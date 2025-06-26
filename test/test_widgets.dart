@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 /// Test version of the app that doesn't require Firebase initialization
 class TestAppWrapper extends StatelessWidget {
   final Widget child;
-  
+
   const TestAppWrapper({super.key, required this.child});
 
   @override
@@ -59,7 +59,7 @@ class TestHomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Alternative PNG logo
               Image.asset(
                 'assets/logo.png',
@@ -67,7 +67,7 @@ class TestHomeScreen extends StatelessWidget {
                 width: 100,
               ),
               const SizedBox(height: 30),
-              
+
               // Control buttons row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -90,7 +90,7 @@ class TestHomeScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 30),
-              
+
               // Navigation grid
               Column(
                 children: [
@@ -112,7 +112,8 @@ class TestHomeScreen extends StatelessWidget {
                       _buildNavButton('Settings', Icons.settings, () {
                         Navigator.pushNamed(context, '/settings');
                       }),
-                      _buildNavButton('Braille Translator', Icons.translate, () {
+                      _buildNavButton('Braille Translator', Icons.translate,
+                          () {
                         Navigator.pushNamed(context, '/braille');
                       }),
                     ],

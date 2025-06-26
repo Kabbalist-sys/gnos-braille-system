@@ -14,7 +14,7 @@ class AuthService {
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
-  }) : _auth = auth ?? FirebaseAuth.instance,
+  })  : _auth = auth ?? FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance,
         _googleSignIn = googleSignIn ?? GoogleSignIn();
 
@@ -25,26 +25,28 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // Sign in with email and password
-  Future<UserCredential?> signInWithEmailAndPassword(String email, String password) async {
+  Future<UserCredential?> signInWithEmailAndPassword(
+      String email, String password) async {
     try {
       // Production security: Rate limiting and validation
       if (FirebaseConfig.isProduction) {
         await _validateSignInAttempt(email);
       }
-      
-      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+
+      final UserCredential userCredential =
+          await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
+
       // Update last login time
       await updateLastLogin();
-      
+
       // Log successful sign-in for analytics
       if (FirebaseConfig.enableAnalytics) {
         await _logAuthEvent('sign_in_success', {'method': 'email'});
       }
-      
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       // Log failed attempts for security monitoring
@@ -57,32 +59,30 @@ class AuthService {
 
   // Register with email and password
   Future<UserCredential?> registerWithEmailAndPassword(
-    String email, 
-    String password, 
-    String displayName
-  ) async {
+      String email, String password, String displayName) async {
     try {
       // Production security: Validate registration data
       if (FirebaseConfig.isProduction) {
         _validateRegistrationData(email, password, displayName);
       }
-      
-      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+
+      final UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
+
       // Update user profile
       await userCredential.user?.updateDisplayName(displayName);
-      
+
       // Create user document in Firestore
       await _createUserDocument(userCredential.user!, displayName);
-      
+
       // Log successful registration
       if (FirebaseConfig.enableAnalytics) {
         await _logAuthEvent('sign_up_success', {'method': 'email'});
       }
-      
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -93,10 +93,10 @@ class AuthService {
   Future<UserCredential?> signInAnonymously() async {
     try {
       final UserCredential userCredential = await _auth.signInAnonymously();
-      
+
       // Create anonymous user document
       await _createUserDocument(userCredential.user!, 'Anonymous User');
-      
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -110,16 +110,17 @@ class AuthService {
       if (FirebaseConfig.isProduction && !_isGoogleSignInEnabled()) {
         throw Exception('Google sign-in is currently disabled');
       }
-      
+
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         return null; // User canceled the sign-in
       }
 
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -128,24 +129,23 @@ class AuthService {
       );
 
       // Sign in to Firebase with the Google credentials
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+
       // Create user document if it doesn't exist
       if (userCredential.additionalUserInfo?.isNewUser == true) {
-        await _createUserDocument(
-          userCredential.user!, 
-          userCredential.user?.displayName ?? 'Google User'
-        );
+        await _createUserDocument(userCredential.user!,
+            userCredential.user?.displayName ?? 'Google User');
       }
-      
+
       // Update last login time
       await updateLastLogin();
-      
+
       // Log successful Google sign-in
       if (FirebaseConfig.enableAnalytics) {
         await _logAuthEvent('sign_in_success', {'method': 'google'});
       }
-      
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -159,15 +159,15 @@ class AuthService {
     try {
       // Clean up any cached data
       await _cleanupUserSession();
-      
+
       // Sign out from Google if signed in with Google
       if (await _googleSignIn.isSignedIn()) {
         await _googleSignIn.signOut();
       }
-      
+
       // Sign out from Firebase
       await _auth.signOut();
-      
+
       // Log sign out event
       if (FirebaseConfig.enableAnalytics) {
         await _logAuthEvent('sign_out', {});
@@ -198,7 +198,7 @@ class AuthService {
         if (photoURL != null) {
           await user.updatePhotoURL(photoURL);
         }
-        
+
         // Update user document in Firestore
         await _firestore.collection('users').doc(user.uid).update({
           'displayName': displayName ?? user.displayName,
@@ -218,7 +218,7 @@ class AuthService {
       if (user != null) {
         // Delete user data from Firestore
         await _deleteUserData(user.uid);
-        
+
         // Delete user account
         await user.delete();
       }
@@ -230,7 +230,7 @@ class AuthService {
   // Create user document in Firestore
   Future<void> _createUserDocument(User user, String displayName) async {
     final userDoc = _firestore.collection('users').doc(user.uid);
-    
+
     await userDoc.set({
       'uid': user.uid,
       'email': user.email,
@@ -255,20 +255,20 @@ class AuthService {
   // Delete user data from Firestore
   Future<void> _deleteUserData(String uid) async {
     final batch = _firestore.batch();
-    
+
     // Delete user document
     batch.delete(_firestore.collection('users').doc(uid));
-    
+
     // Delete user's translations
     final translations = await _firestore
         .collection('translations')
         .where('userId', isEqualTo: uid)
         .get();
-    
+
     for (final doc in translations.docs) {
       batch.delete(doc.reference);
     }
-    
+
     await batch.commit();
   }
 
@@ -332,11 +332,11 @@ class AuthService {
     // Check for rate limiting in production
     final now = DateTime.now();
     final attempts = await _getRecentSignInAttempts(email);
-    
+
     if (attempts.length >= 5) {
       final lastAttempt = attempts.last;
       final timeDiff = now.difference(lastAttempt).inMinutes;
-      
+
       if (timeDiff < 15) {
         throw FirebaseAuthException(
           code: 'too-many-requests',
@@ -346,7 +346,8 @@ class AuthService {
     }
   }
 
-  void _validateRegistrationData(String email, String password, String displayName) {
+  void _validateRegistrationData(
+      String email, String password, String displayName) {
     // Email validation
     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
       throw FirebaseAuthException(
@@ -354,7 +355,7 @@ class AuthService {
         message: 'Please enter a valid email address.',
       );
     }
-    
+
     // Password strength validation
     if (password.length < 8) {
       throw FirebaseAuthException(
@@ -362,14 +363,15 @@ class AuthService {
         message: 'Password must be at least 8 characters long.',
       );
     }
-    
+
     if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(password)) {
       throw FirebaseAuthException(
         code: 'weak-password',
-        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number.',
+        message:
+            'Password must contain at least one uppercase letter, one lowercase letter, and one number.',
       );
     }
-    
+
     // Display name validation
     if (displayName.trim().length < 2) {
       throw FirebaseAuthException(
@@ -377,7 +379,7 @@ class AuthService {
         message: 'Display name must be at least 2 characters long.',
       );
     }
-    
+
     if (displayName.length > 50) {
       throw FirebaseAuthException(
         code: 'invalid-display-name',
@@ -401,7 +403,7 @@ class AuthService {
           .orderBy('timestamp', descending: true)
           .limit(10)
           .get();
-      
+
       return doc.docs
           .map((doc) => (doc.data()['timestamp'] as Timestamp).toDate())
           .toList();
@@ -429,14 +431,15 @@ class AuthService {
     }
   }
 
-  Future<void> _logAuthEvent(String eventName, Map<String, dynamic> parameters) async {
+  Future<void> _logAuthEvent(
+      String eventName, Map<String, dynamic> parameters) async {
     try {
       // Log to analytics service
       if (FirebaseConfig.enableAnalytics) {
         // This would integrate with Firebase Analytics
         // await FirebaseAnalytics.instance.logEvent(name: eventName, parameters: parameters);
       }
-      
+
       // Log to custom analytics collection for detailed tracking
       await _firestore.collection('analytics').add({
         'event': eventName,

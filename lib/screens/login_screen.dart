@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final user = await _authService.signInWithGoogle();
-      
+
       if (user != null && mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
@@ -159,7 +159,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() {

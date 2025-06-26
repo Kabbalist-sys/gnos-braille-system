@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 /// Service class for integrating with the Braille Translation API
 class BrailleApiService {
   static const String baseUrl = 'http://localhost:5000';
-  
+
   /// Translates text to Braille or Braille to text
   static Future<Map<String, dynamic>> translateText({
     required String text,
@@ -29,7 +29,7 @@ class BrailleApiService {
           'include_metadata': includeMetadata,
         }),
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -51,7 +51,7 @@ class BrailleApiService {
       };
     }
   }
-  
+
   /// Get health status of the API
   static Future<Map<String, dynamic>> healthCheck() async {
     try {
@@ -59,7 +59,7 @@ class BrailleApiService {
         Uri.parse('$baseUrl/health'),
         headers: {'Content-Type': 'application/json'},
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -75,7 +75,7 @@ class BrailleApiService {
       };
     }
   }
-  
+
   /// Get supported Braille standards
   static Future<Map<String, dynamic>> getSupportedStandards() async {
     try {
@@ -83,7 +83,7 @@ class BrailleApiService {
         Uri.parse('$baseUrl/api/braille/standards'),
         headers: {'Content-Type': 'application/json'},
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -99,7 +99,7 @@ class BrailleApiService {
       };
     }
   }
-  
+
   /// Get supported languages
   static Future<Map<String, dynamic>> getSupportedLanguages() async {
     try {
@@ -107,7 +107,7 @@ class BrailleApiService {
         Uri.parse('$baseUrl/api/braille/languages'),
         headers: {'Content-Type': 'application/json'},
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -123,7 +123,7 @@ class BrailleApiService {
       };
     }
   }
-  
+
   /// Get demo translations
   static Future<Map<String, dynamic>> getDemoTranslations() async {
     try {
@@ -131,7 +131,7 @@ class BrailleApiService {
         Uri.parse('$baseUrl/api/braille/demo'),
         headers: {'Content-Type': 'application/json'},
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {

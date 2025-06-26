@@ -11,7 +11,7 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final FirebaseAuth firebaseAuth = auth ?? FirebaseAuth.instance;
-    
+
     return StreamBuilder<User?>(
       stream: firebaseAuth.authStateChanges(),
       builder: (context, snapshot) {
@@ -22,7 +22,7 @@ class AuthWrapper extends StatelessWidget {
             ),
           );
         }
-        
+
         if (snapshot.hasData) {
           // User is signed in
           return child;

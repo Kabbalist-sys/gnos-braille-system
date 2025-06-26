@@ -12,35 +12,38 @@ void main() {
   });
 
   group('Firebase Initialization Tests', () {
-    testWidgets('App loads without Firebase errors', (WidgetTester tester) async {
+    testWidgets('App loads without Firebase errors',
+        (WidgetTester tester) async {
       // This test verifies that the app can load without Firebase initialization issues
       await tester.pumpWidget(const TestDotHullAccessibleApp());
-      
+
       // Verify theme configuration
       final MaterialApp app = tester.widget(find.byType(MaterialApp));
-      expect(app.theme?.visualDensity, equals(VisualDensity.adaptivePlatformDensity));
-      
+      expect(app.theme?.visualDensity,
+          equals(VisualDensity.adaptivePlatformDensity));
+
       // Check app title and initial route
       expect(app.title, equals('Dot Hull Accessible App'));
       expect(app.initialRoute, equals('/login'));
-      
+
       // Verify routes are configured
       expect(app.routes, isNotNull);
       expect(app.routes?.length, greaterThan(5));
     });
 
-    testWidgets('Home screen displays without Firebase dependencies', (WidgetTester tester) async {
+    testWidgets('Home screen displays without Firebase dependencies',
+        (WidgetTester tester) async {
       // Test the home screen directly without Firebase
       await tester.pumpWidget(MaterialApp(home: MockHomeScreen()));
       await tester.pumpAndSettle();
 
       // Verify app title in AppBar
       expect(find.text('Dot Hull Accessible App'), findsOneWidget);
-      
+
       // Check for modern UI components
       expect(find.byType(AnimatedContainer), findsOneWidget);
       expect(find.byType(SingleChildScrollView), findsOneWidget);
-      
+
       // Verify SVG logo presence and semantic labeling
       expect(find.byType(SvgPicture), findsOneWidget);
       final svgWidget = tester.widget<SvgPicture>(find.byType(SvgPicture));
@@ -54,7 +57,8 @@ void main() {
       expect(find.text('Login Screen'), findsOneWidget);
     });
 
-    testWidgets('Navigation structure is properly set up', (WidgetTester tester) async {
+    testWidgets('Navigation structure is properly set up',
+        (WidgetTester tester) async {
       await tester.pumpWidget(const TestDotHullAccessibleApp());
       await tester.pumpAndSettle();
 
@@ -64,17 +68,20 @@ void main() {
   });
 
   group('Theme & Layout Tests', () {
-    testWidgets('App uses correct theme configuration', (WidgetTester tester) async {
+    testWidgets('App uses correct theme configuration',
+        (WidgetTester tester) async {
       await tester.pumpWidget(const TestDotHullAccessibleApp());
-      
+
       final MaterialApp app = tester.widget(find.byType(MaterialApp));
       // Check that theme is properly configured
       expect(app.theme, isNotNull);
-      expect(app.theme?.visualDensity, equals(VisualDensity.adaptivePlatformDensity));
+      expect(app.theme?.visualDensity,
+          equals(VisualDensity.adaptivePlatformDensity));
       expect(app.theme?.colorScheme, isNotNull);
     });
 
-    testWidgets('Drawer navigation works correctly', (WidgetTester tester) async {
+    testWidgets('Drawer navigation works correctly',
+        (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(home: MockHomeScreen()));
       await tester.pumpAndSettle();
 

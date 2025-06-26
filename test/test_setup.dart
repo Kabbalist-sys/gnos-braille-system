@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 class TestSetup {
   static Future<void> initializeFirebaseForTesting() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    
+
     // Mock Firebase Core
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(

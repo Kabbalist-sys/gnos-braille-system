@@ -88,43 +88,50 @@ class MockHomeScreen extends StatelessWidget {
 class MockLoginScreen extends StatelessWidget {
   const MockLoginScreen({super.key});
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Text('Login Screen'));
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Text('Login Screen'));
 }
 
 class MockRegisterScreen extends StatelessWidget {
   const MockRegisterScreen({super.key});
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Text('Register Screen'));
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Text('Register Screen'));
 }
 
 class MockForgotPasswordScreen extends StatelessWidget {
   const MockForgotPasswordScreen({super.key});
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Text('Forgot Password Screen'));
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Text('Forgot Password Screen'));
 }
 
 class MockProfileScreen extends StatelessWidget {
   const MockProfileScreen({super.key});
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Text('Profile Screen'));
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Text('Profile Screen'));
 }
 
 class MockTranslationHistoryScreen extends StatelessWidget {
   const MockTranslationHistoryScreen({super.key});
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Text('Translation History Screen'));
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Text('Translation History Screen'));
 }
 
 class MockSettingsScreen extends StatelessWidget {
   const MockSettingsScreen({super.key});
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Text('Settings Screen'));
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Text('Settings Screen'));
 }
 
 class MockAnalyticsScreen extends StatelessWidget {
   const MockAnalyticsScreen({super.key});
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Text('Analytics Screen'));
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Text('Analytics Screen'));
 }
 
 class MockAppDrawer extends StatelessWidget {

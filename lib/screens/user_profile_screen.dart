@@ -61,9 +61,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       await _authService.updateProfile(
         displayName: _displayNameController.text.trim(),
       );
-      
+
       setState(() => _isEditing = false);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -111,7 +111,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       try {
         await _authService.signOut();
         if (mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          Navigator.pushNamedAndRemoveUntil(
+              context, '/login', (route) => false);
         }
       } catch (e) {
         if (mounted) {
@@ -155,9 +156,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             CircleAvatar(
               radius: 60,
               backgroundColor: Colors.blue[100],
-              backgroundImage: user.photoURL != null 
-                  ? NetworkImage(user.photoURL!) 
-                  : null,
+              backgroundImage:
+                  user.photoURL != null ? NetworkImage(user.photoURL!) : null,
               child: user.photoURL == null
                   ? Icon(
                       Icons.person,
@@ -192,7 +192,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             setState(() {
                               _isEditing = !_isEditing;
                               if (!_isEditing) {
-                                _displayNameController.text = user.displayName ?? '';
+                                _displayNameController.text =
+                                    user.displayName ?? '';
                               }
                             });
                           },
@@ -229,13 +230,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             foregroundColor: Colors.white,
                           ),
                           child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white)
                               : const Text('Update Profile'),
                         ),
                       ),
                     ] else ...[
                       const SizedBox(height: 8),
-                      
+
                       // Email
                       ListTile(
                         leading: const Icon(Icons.email),
@@ -248,10 +250,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ListTile(
                         leading: Icon(
                           user.emailVerified ? Icons.verified : Icons.warning,
-                          color: user.emailVerified ? Colors.green : Colors.orange,
+                          color:
+                              user.emailVerified ? Colors.green : Colors.orange,
                         ),
                         title: const Text('Email Status'),
-                        subtitle: Text(user.emailVerified ? 'Verified' : 'Not verified'),
+                        subtitle: Text(
+                            user.emailVerified ? 'Verified' : 'Not verified'),
                         contentPadding: EdgeInsets.zero,
                       ),
 
@@ -259,9 +263,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ListTile(
                         leading: const Icon(Icons.calendar_today),
                         title: const Text('Member Since'),
-                        subtitle: Text(
-                          user.metadata.creationTime?.toString().split(' ')[0] ?? 'Unknown'
-                        ),
+                        subtitle: Text(user.metadata.creationTime
+                                ?.toString()
+                                .split(' ')[0] ??
+                            'Unknown'),
                         contentPadding: EdgeInsets.zero,
                       ),
                     ],
@@ -288,7 +293,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
@@ -305,18 +309,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _buildStatItem(
                             'Languages Used',
-                            _userStats!['languagesUsed']?.length?.toString() ?? '0',
+                            _userStats!['languagesUsed']?.length?.toString() ??
+                                '0',
                             Icons.language,
                           ),
                           _buildStatItem(
                             'Braille Standards',
-                            _userStats!['brailleStandardsUsed']?.length?.toString() ?? '0',
+                            _userStats!['brailleStandardsUsed']
+                                    ?.length
+                                    ?.toString() ??
+                                '0',
                             Icons.accessibility,
                           ),
                         ],
@@ -342,7 +349,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
                     ListTile(
                       leading: const Icon(Icons.history),
                       title: const Text('Translation History'),
@@ -351,7 +357,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         Navigator.pushNamed(context, '/translation-history');
                       },
                     ),
-
                     if (!user.emailVerified)
                       ListTile(
                         leading: const Icon(Icons.email),
@@ -379,7 +384,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           );
                         },
                       ),
-
                     ListTile(
                       leading: const Icon(Icons.lock),
                       title: const Text('Change Password'),

@@ -15,16 +15,16 @@ import 'screens/forgot_password_screen.dart';
 import 'screens/user_profile_screen.dart';
 import 'screens/translation_history_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/analytics_screen.dart';  
+import 'screens/analytics_screen.dart';
 import 'widgets/auth_wrapper.dart';
 import 'widgets/app_drawer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase with production-ready configuration
   await FirebaseConfig.initialize();
-  
+
   runApp(DotHullAccessibleApp());
 }
 
@@ -47,14 +47,16 @@ class DotHullAccessibleApp extends StatelessWidget {
         '/register': (context) => RegisterScreen(),
         '/forgot-password': (context) => ForgotPasswordScreen(),
         '/profile': (context) => AuthWrapper(child: UserProfileScreen()),
-        '/translation-history': (context) => AuthWrapper(child: TranslationHistoryScreen()),
+        '/translation-history': (context) =>
+            AuthWrapper(child: TranslationHistoryScreen()),
         '/analytics': (context) => AuthWrapper(child: AnalyticsScreen()),
         '/camera': (context) => AuthWrapper(child: CameraScreen()),
         '/lens': (context) => AuthWrapper(child: LensScreen()),
         '/settings': (context) => AuthWrapper(child: SettingsScreen()),
         '/braille': (context) => AuthWrapper(child: BrailleScreen()),
         '/wireframe': (context) => AuthWrapper(child: WireframeScreen()),
-        '/notifications': (context) => AuthWrapper(child: NotificationsScreen()),
+        '/notifications': (context) =>
+            AuthWrapper(child: NotificationsScreen()),
         '/cloud': (context) => AuthWrapper(child: CloudScreen()),
         '/blockchain': (context) => AuthWrapper(child: BlockchainScreen()),
         '/about': (context) => AuthWrapper(child: AboutScreen()),
@@ -133,7 +135,8 @@ class HomeScreen extends StatelessWidget {
                   final authService = AuthService();
                   await authService.signOut();
                   if (context.mounted) {
-                    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, '/login', (route) => false);
                   }
                   break;
               }
@@ -156,7 +159,10 @@ class HomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(32),
                   gradient: LinearGradient(
                     colors: [
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                      Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.12),
                       Colors.white
                     ],
                     begin: Alignment.topLeft,
@@ -351,7 +357,8 @@ class _CameraScreenState extends State<CameraScreen> {
     // After running the script, use the processed image for OCR
     final inputImage = InputImage.fromFilePath(outputPath);
     final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-    final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+    final RecognizedText recognizedText =
+        await textRecognizer.processImage(inputImage);
     setState(() {
       _recognizedText = recognizedText.text;
       _isProcessing = false;
@@ -386,10 +393,12 @@ class _CameraScreenState extends State<CameraScreen> {
       if (_recognizedText != null) await _speak(_recognizedText!);
     } else if (command.toLowerCase().contains('translate')) {
       // Try to extract language from command
-      String? langCode = _languages.entries.firstWhere(
-        (entry) => command.toLowerCase().contains(entry.key.toLowerCase()),
-        orElse: () => MapEntry('English', 'en'),
-      ).value;
+      String? langCode = _languages.entries
+          .firstWhere(
+            (entry) => command.toLowerCase().contains(entry.key.toLowerCase()),
+            orElse: () => MapEntry('English', 'en'),
+          )
+          .value;
       setState(() => _selectedLanguage = langCode);
       await _translateText(langCode);
     }
@@ -402,7 +411,8 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> _translateText(String targetLang) async {
     if (_recognizedText == null) return;
-    var translation = await _translator.translate(_recognizedText!, to: targetLang);
+    var translation =
+        await _translator.translate(_recognizedText!, to: targetLang);
     setState(() {
       _translatedText = translation.text;
     });
@@ -432,18 +442,23 @@ class _CameraScreenState extends State<CameraScreen> {
                   ),
                   ElevatedButton(
                     onPressed: _isProcessing ? null : _captureAndRecognize,
-                    child: Text(_isProcessing ? 'Processing...' : 'Capture & OCR'),
+                    child:
+                        Text(_isProcessing ? 'Processing...' : 'Capture & OCR'),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: _isListening ? _stopListening : _startListening,
-                        child: Text(_isListening ? 'Stop Listening' : 'Voice Command'),
+                        onPressed:
+                            _isListening ? _stopListening : _startListening,
+                        child: Text(
+                            _isListening ? 'Stop Listening' : 'Voice Command'),
                       ),
                       SizedBox(width: 16),
                       ElevatedButton(
-                        onPressed: _recognizedText == null ? null : () => _speak(_recognizedText!),
+                        onPressed: _recognizedText == null
+                            ? null
+                            : () => _speak(_recognizedText!),
                         child: Text('Read Aloud'),
                       ),
                       SizedBox(width: 16),
@@ -456,11 +471,14 @@ class _CameraScreenState extends State<CameraScreen> {
                                 ))
                             .toList(),
                         onChanged: (lang) {
-                          if (lang != null) setState(() => _selectedLanguage = lang);
+                          if (lang != null)
+                            setState(() => _selectedLanguage = lang);
                         },
                       ),
                       ElevatedButton(
-                        onPressed: _recognizedText == null ? null : () => _translateText(_selectedLanguage),
+                        onPressed: _recognizedText == null
+                            ? null
+                            : () => _translateText(_selectedLanguage),
                         child: Text('Translate'),
                       ),
                     ],
@@ -509,7 +527,9 @@ class LensScreen extends StatelessWidget {
                 border: Border.all(color: Colors.red, width: 3),
                 color: Colors.red.withValues(alpha: 0.1),
               ),
-              child: Center(child: Text('Detected Dot Hull Text', style: TextStyle(color: Colors.red))),
+              child: Center(
+                  child: Text('Detected Dot Hull Text',
+                      style: TextStyle(color: Colors.red))),
             ),
           ),
         ],
@@ -556,14 +576,15 @@ class _BrailleScreenState extends State<BrailleScreen> {
   Future<void> _loadSupportedOptions() async {
     final standardsResponse = await BrailleApiService.getSupportedStandards();
     final languagesResponse = await BrailleApiService.getSupportedLanguages();
-    
+
     setState(() {
       _standards = standardsResponse['standards'] ?? [];
       _languages = languagesResponse['languages'] ?? [];
     });
   }
 
-  Future<void> _saveTranslation(String originalText, String translatedText) async {
+  Future<void> _saveTranslation(
+      String originalText, String translatedText) async {
     try {
       final translationRecord = TranslationRecord(
         id: '', // Will be generated by Firestore
@@ -576,7 +597,7 @@ class _BrailleScreenState extends State<BrailleScreen> {
         metadata: _metadata,
         userId: '', // Will be set by the service
       );
-      
+
       await _cloudStorageService.saveTranslation(translationRecord);
     } catch (e) {
       // Handle error silently or show a subtle notification
@@ -587,7 +608,7 @@ class _BrailleScreenState extends State<BrailleScreen> {
   Future<void> _translateText() async {
     setState(() => _isLoading = true);
     final input = _inputController.text;
-    
+
     if (input.isEmpty) {
       setState(() {
         _brailleResult = null;
@@ -611,7 +632,7 @@ class _BrailleScreenState extends State<BrailleScreen> {
         if (result['success'] == true) {
           _brailleResult = result['result'];
           _metadata = result['metadata'];
-          
+
           // Save translation to cloud storage
           _saveTranslation(input, _brailleResult!);
         } else {
@@ -644,14 +665,18 @@ class _BrailleScreenState extends State<BrailleScreen> {
           children: [
             // API Status Card
             Card(
-              color: _apiStatus == 'Connected' ? Colors.green[50] : Colors.red[50],
+              color:
+                  _apiStatus == 'Connected' ? Colors.green[50] : Colors.red[50],
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Row(
                   children: [
                     Icon(
-                      _apiStatus == 'Connected' ? Icons.check_circle : Icons.error,
-                      color: _apiStatus == 'Connected' ? Colors.green : Colors.red,
+                      _apiStatus == 'Connected'
+                          ? Icons.check_circle
+                          : Icons.error,
+                      color:
+                          _apiStatus == 'Connected' ? Colors.green : Colors.red,
                     ),
                     SizedBox(width: 8),
                     Text('API Status: ${_apiStatus ?? "Checking..."}'),
@@ -667,7 +692,8 @@ class _BrailleScreenState extends State<BrailleScreen> {
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
-                    Text('Translation Mode:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Translation Mode:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     Spacer(),
                     Text('Text → Braille'),
                     Switch(
@@ -698,11 +724,13 @@ class _BrailleScreenState extends State<BrailleScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Standard', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('Standard',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                           DropdownButton<String>(
                             value: _selectedStandard,
                             isExpanded: true,
-                            items: _standards.map<DropdownMenuItem<String>>((standard) {
+                            items: _standards
+                                .map<DropdownMenuItem<String>>((standard) {
                               return DropdownMenuItem<String>(
                                 value: standard['code'],
                                 child: Text(standard['name']),
@@ -727,11 +755,13 @@ class _BrailleScreenState extends State<BrailleScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Language', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('Language',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                           DropdownButton<String>(
                             value: _selectedLanguage,
                             isExpanded: true,
-                            items: _languages.map<DropdownMenuItem<String>>((language) {
+                            items: _languages
+                                .map<DropdownMenuItem<String>>((language) {
                               return DropdownMenuItem<String>(
                                 value: language['code'],
                                 child: Text(language['name']),
@@ -756,8 +786,8 @@ class _BrailleScreenState extends State<BrailleScreen> {
             TextField(
               controller: _inputController,
               decoration: InputDecoration(
-                labelText: _isReverse 
-                    ? 'Enter Braille to translate to text' 
+                labelText: _isReverse
+                    ? 'Enter Braille to translate to text'
                     : 'Enter text to translate to Braille',
                 border: OutlineInputBorder(),
                 filled: true,
@@ -786,8 +816,7 @@ class _BrailleScreenState extends State<BrailleScreen> {
             const SizedBox(height: 24),
 
             // Loading Indicator
-            if (_isLoading) 
-              Center(child: CircularProgressIndicator()),
+            if (_isLoading) Center(child: CircularProgressIndicator()),
 
             // Result Display
             if (_brailleResult != null && !_isLoading)
@@ -827,10 +856,13 @@ class _BrailleScreenState extends State<BrailleScreen> {
                           ),
                         ),
                         SizedBox(height: 8),
-                        _buildMetadataRow('Method', _metadata!['translation_method'] ?? 'Unknown'),
-                        _buildMetadataRow('Characters', '${_inputController.text.length}'),
+                        _buildMetadataRow('Method',
+                            _metadata!['translation_method'] ?? 'Unknown'),
+                        _buildMetadataRow(
+                            'Characters', '${_inputController.text.length}'),
                         if (_metadata!['compression_ratio'] != null)
-                          _buildMetadataRow('Compression', '${_metadata!['compression_ratio']}x'),
+                          _buildMetadataRow('Compression',
+                              '${_metadata!['compression_ratio']}x'),
                         if (_metadata!['contractions_used'] == true)
                           _buildMetadataRow('Contractions', 'Used'),
                       ],
@@ -882,7 +914,8 @@ class WireframeScreen extends StatelessWidget {
                   children: [
                     Icon(Icons.account_tree, size: 40, color: Colors.grey),
                     SizedBox(height: 8),
-                    Text('Header / Logo', style: TextStyle(fontSize: 20, color: Colors.grey)),
+                    Text('Header / Logo',
+                        style: TextStyle(fontSize: 20, color: Colors.grey)),
                   ],
                 ),
               ),
@@ -1007,9 +1040,15 @@ class NotificationsScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Notifications')),
       body: ListView(
         children: [
-          ListTile(leading: Icon(Icons.notifications), title: Text('Welcome to the app!')),
-          ListTile(leading: Icon(Icons.notifications), title: Text('Your scan is complete.')),
-          ListTile(leading: Icon(Icons.notifications), title: Text('Cloud sync successful.')),
+          ListTile(
+              leading: Icon(Icons.notifications),
+              title: Text('Welcome to the app!')),
+          ListTile(
+              leading: Icon(Icons.notifications),
+              title: Text('Your scan is complete.')),
+          ListTile(
+              leading: Icon(Icons.notifications),
+              title: Text('Cloud sync successful.')),
         ],
       ),
     );
@@ -1022,7 +1061,9 @@ class CloudScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Cloud')),
-      body: Center(child: Text('Cloud status: Connected\nFiles: 3 uploaded', textAlign: TextAlign.center)),
+      body: Center(
+          child: Text('Cloud status: Connected\nFiles: 3 uploaded',
+              textAlign: TextAlign.center)),
     );
   }
 }
@@ -1046,7 +1087,9 @@ class AboutScreen extends StatelessWidget {
       appBar: AppBar(title: Text('About')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: Text('Dot Hull Accessible App\nVersion 1.0.0\nAccessible, cross-platform, and feature-rich.', textAlign: TextAlign.center),
+        child: Text(
+            'Dot Hull Accessible App\nVersion 1.0.0\nAccessible, cross-platform, and feature-rich.',
+            textAlign: TextAlign.center),
       ),
     );
   }

@@ -5,7 +5,8 @@ class TranslationHistoryScreen extends StatefulWidget {
   const TranslationHistoryScreen({super.key});
 
   @override
-  State<TranslationHistoryScreen> createState() => _TranslationHistoryScreenState();
+  State<TranslationHistoryScreen> createState() =>
+      _TranslationHistoryScreenState();
 }
 
 class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
@@ -23,7 +24,7 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
 
   Future<void> _loadTranslations() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final stream = _cloudStorageService.getTranslationHistory();
       final translations = await stream.first;
@@ -50,7 +51,7 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
       if (_searchQuery.isNotEmpty) {
         final originalText = translation.originalText.toLowerCase();
         final translatedText = translation.translatedText.toLowerCase();
-        if (!originalText.contains(_searchQuery.toLowerCase()) && 
+        if (!originalText.contains(_searchQuery.toLowerCase()) &&
             !translatedText.contains(_searchQuery.toLowerCase())) {
           return false;
         }
@@ -58,8 +59,10 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
 
       // Type filter
       if (_selectedFilter != 'all') {
-        if (_selectedFilter == 'to_braille' && translation.isReverse) return false;
-        if (_selectedFilter == 'from_braille' && !translation.isReverse) return false;
+        if (_selectedFilter == 'to_braille' && translation.isReverse)
+          return false;
+        if (_selectedFilter == 'from_braille' && !translation.isReverse)
+          return false;
       }
 
       return true;
@@ -73,7 +76,8 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
 
   Future<void> _exportTranslations() async {
     try {
-      final exportedFilename = await _cloudStorageService.exportTranslationHistory();
+      final exportedFilename =
+          await _cloudStorageService.exportTranslationHistory();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -99,7 +103,8 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Translation'),
-        content: const Text('Are you sure you want to delete this translation?'),
+        content:
+            const Text('Are you sure you want to delete this translation?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -174,7 +179,7 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Filter Chips
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -215,7 +220,7 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
               ],
             ),
           ),
-          
+
           // Results Count
           if (!_isLoading)
             Padding(
@@ -231,7 +236,7 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
                 ),
               ),
             ),
-          
+
           // Translation List
           Expanded(
             child: _isLoading
@@ -248,7 +253,8 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              _searchQuery.isNotEmpty || _selectedFilter != 'all'
+                              _searchQuery.isNotEmpty ||
+                                      _selectedFilter != 'all'
                                   ? 'No translations match your search'
                                   : 'No translations yet',
                               style: TextStyle(
@@ -287,7 +293,7 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
     final timestamp = translation.timestamp;
     final language = translation.language;
     final brailleStandard = translation.standard;
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
@@ -337,7 +343,7 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
                 ),
               ],
             ),
-            
+
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
@@ -348,9 +354,9 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Original Text
             Container(
               width: double.infinity,
@@ -380,9 +386,9 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // Translated Text
             Container(
               width: double.infinity,
@@ -412,7 +418,7 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
                 ],
               ),
             ),
-            
+
             // Metadata
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -447,7 +453,7 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
   String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays} days ago';
     } else if (difference.inHours > 0) {
