@@ -10,7 +10,7 @@ on:
 
 jobs:
   analyze:
-    name: Analyze (placeholder for Dart/Flutter)
+    name: Analyze (Disabled for Flutter Project)
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -21,13 +21,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      # Dart/Flutter is not supported, but this step is here as a placeholder
-
-    - name: No-op Build (Dart/Flutter not supported)
-      run: echo "No build needed for Dart/Flutter; CodeQL not supported"
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      # This step will not analyze Dart/Flutter code, but remains for potential future support
+    - name: CodeQL Analysis Status
+      run: |
+        echo "::notice::CodeQL analysis is disabled for this Flutter project"
+        echo "CodeQL does not support Dart/Flutter language analysis."
+        echo "For Dart/Flutter code quality and security:"
+        echo "- Use 'flutter analyze' for static analysis"
+        echo "- Use 'dart format' for code formatting"
+        echo "- Use Semgrep in quality-checks.yml for security scanning"
+        echo "- Use TruffleHog for secrets detection"
+        
+    - name: Skip CodeQL Analysis
+      run: |
+        echo "Skipping CodeQL analysis - not applicable for Flutter/Dart projects"
+        echo "All security and quality checks are handled by other workflows"
