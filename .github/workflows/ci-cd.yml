@@ -65,7 +65,12 @@ jobs:
     - name: Check for secrets in code
       run: |
         echo "🔍 Scanning for potential secrets..."
-        if grep -r "AIzaSy" lib/ --include="*.dart" || grep -r "firebase.*:" lib/ --include="*.dart"; then
+        # Exclude firebase_options.dart as it contains safe-to-expose Firebase API keys
+        if find lib/ -name "*.dart" -not -name "firebase_options.dart" -exec grep -l "AIzaSy" {} \; | grep -q .; then
+          echo "❌ Potential hardcoded Firebase secrets found!"
+          exit 1
+        fi
+        if find lib/ -name "*.dart" -not -name "firebase_options.dart" -exec grep -l "firebase.*:" {} \; | grep -q .; then
           echo "❌ Potential hardcoded Firebase secrets found!"
           exit 1
         fi
