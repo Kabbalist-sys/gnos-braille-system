@@ -471,8 +471,9 @@ class _CameraScreenState extends State<CameraScreen> {
                                 ))
                             .toList(),
                         onChanged: (lang) {
-                          if (lang != null)
+                          if (lang != null) {
                             setState(() => _selectedLanguage = lang);
+                          }
                         },
                       ),
                       ElevatedButton(

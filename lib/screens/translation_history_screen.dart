@@ -59,10 +59,12 @@ class _TranslationHistoryScreenState extends State<TranslationHistoryScreen> {
 
       // Type filter
       if (_selectedFilter != 'all') {
-        if (_selectedFilter == 'to_braille' && translation.isReverse)
+        if (_selectedFilter == 'to_braille' && translation.isReverse) {
           return false;
-        if (_selectedFilter == 'from_braille' && !translation.isReverse)
+        }
+        if (_selectedFilter == 'from_braille' && !translation.isReverse) {
           return false;
+        }
       }
 
       return true;
