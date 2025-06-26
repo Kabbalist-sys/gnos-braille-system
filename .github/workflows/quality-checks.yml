@@ -120,7 +120,7 @@ jobs:
       run: flutter pub get
       
     - name: Build for performance analysis
-      run: flutter build web --release --analyze-size
+      run: flutter build web --release
       
     - name: Analyze bundle size
       run: |

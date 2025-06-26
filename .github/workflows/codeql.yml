@@ -10,17 +10,12 @@ on:
 
 jobs:
   analyze:
-    name: Analyze
+    name: Analyze (placeholder for Dart/Flutter)
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
       security-events: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript', 'python' ] # No 'java' to avoid Java autobuild errors
 
     steps:
     - name: Checkout repository
@@ -28,12 +23,11 @@ jobs:
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
+      # Dart/Flutter is not supported, but this step is here as a placeholder
 
-    - name: Autobuild
-      # No build needed for Dart/Flutter; this is a placeholder for JS/Python projects
-      run: echo "No build needed for this project"
+    - name: No-op Build (Dart/Flutter not supported)
+      run: echo "No build needed for Dart/Flutter; CodeQL not supported"
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
+      # This step will not analyze Dart/Flutter code, but remains for potential future support
