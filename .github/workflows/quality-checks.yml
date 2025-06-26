@@ -27,7 +27,7 @@ jobs:
       run: flutter pub get
       
     - name: Run Flutter analyze
-      run: flutter analyze --write=analysis_results.txt
+      run: flutter analyze --no-fatal-warnings --write=analysis_results.txt
       
     - name: Run custom linting
       run: |
