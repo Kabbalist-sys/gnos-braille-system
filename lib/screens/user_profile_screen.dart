@@ -360,24 +360,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         onTap: () async {
                           try {
                             await user.sendEmailVerification();
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Verification email sent!'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            }
                           } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Error: ${e.toString()}'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: [4m${e.toString()}[0m'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
                           }
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Verification email sent!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
                         },
                       ),
 

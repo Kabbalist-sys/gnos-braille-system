@@ -8,8 +8,10 @@ class TestSetup {
     TestWidgetsFlutterBinding.ensureInitialized();
     
     // Mock Firebase Core
-    const MethodChannel('plugins.flutter.io/firebase_core')
-        .setMockMethodCallHandler((call) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/firebase_core'),
+            (call) async {
       switch (call.method) {
         case 'Firebase#initializeCore':
           return {
@@ -34,8 +36,10 @@ class TestSetup {
     });
 
     // Mock Firebase Auth
-    const MethodChannel('plugins.flutter.io/firebase_auth')
-        .setMockMethodCallHandler((call) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/firebase_auth'),
+            (call) async {
       switch (call.method) {
         case 'Auth#registerIdTokenListener':
           return {'user': null};
@@ -55,32 +59,42 @@ class TestSetup {
     });
 
     // Mock Firestore
-    const MethodChannel('plugins.flutter.io/cloud_firestore')
-        .setMockMethodCallHandler((call) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/cloud_firestore'),
+            (call) async {
       return null;
     });
 
     // Mock Firebase Storage
-    const MethodChannel('plugins.flutter.io/firebase_storage')
-        .setMockMethodCallHandler((call) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/firebase_storage'),
+            (call) async {
       return null;
     });
 
     // Mock Firebase Analytics
-    const MethodChannel('plugins.flutter.io/firebase_analytics')
-        .setMockMethodCallHandler((call) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/firebase_analytics'),
+            (call) async {
       return null;
     });
 
     // Mock Firebase Crashlytics
-    const MethodChannel('plugins.flutter.io/firebase_crashlytics')
-        .setMockMethodCallHandler((call) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/firebase_crashlytics'),
+            (call) async {
       return null;
     });
 
     // Mock Firebase Performance
-    const MethodChannel('plugins.flutter.io/firebase_performance')
-        .setMockMethodCallHandler((call) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/firebase_performance'),
+            (call) async {
       return null;
     });
 

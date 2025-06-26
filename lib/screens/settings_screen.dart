@@ -386,6 +386,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (result == true) {
       // TODO: Implement clear history functionality
       ScaffoldMessenger.of(context).showSnackBar(

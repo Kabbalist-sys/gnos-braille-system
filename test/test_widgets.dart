@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 class TestAppWrapper extends StatelessWidget {
   final Widget child;
   
-  const TestAppWrapper({Key? key, required this.child}) : super(key: key);
+  const TestAppWrapper({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class TestAppWrapper extends StatelessWidget {
 
 /// Simplified home screen for testing
 class TestHomeScreen extends StatelessWidget {
-  const TestHomeScreen({Key? key}) : super(key: key);
+  const TestHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +50,7 @@ class TestHomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Logo section
-              Container(
+              SizedBox(
                 height: 200,
                 child: SvgPicture.asset(
                   'assets/logo_kabbalah.svg',

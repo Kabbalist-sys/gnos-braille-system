@@ -1,19 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:translator/translator.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import '../lib/screens/login_screen.dart';
-import '../lib/screens/register_screen.dart';
-import '../lib/screens/forgot_password_screen.dart';
-import '../lib/screens/user_profile_screen.dart';
-import '../lib/screens/translation_history_screen.dart';
-import '../lib/screens/settings_screen.dart';
-import '../lib/screens/analytics_screen.dart';  
-import '../lib/widgets/auth_wrapper.dart';
-import '../lib/widgets/app_drawer.dart';
 
 /// Test-only version of the main app that doesn't initialize Firebase
 class TestDotHullAccessibleApp extends StatelessWidget {
@@ -63,10 +48,18 @@ class MockHomeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  SvgPicture.asset(
-                    'assets/logo_kabbalah.svg',
+                  Container(
                     height: 120,
-                    semanticsLabel: 'Kabbalah Tree of Life',
+                    width: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade100,
+                      borderRadius: BorderRadius.circular(60),
+                    ),
+                    child: const Icon(
+                      Icons.accessibility,
+                      size: 80,
+                      color: Colors.blue,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   const Text(
