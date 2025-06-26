@@ -27,7 +27,7 @@ android {
         applicationId = "com.example.gnos_braille_system"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 21
+        minSdk = 23  // Required for Firebase Auth
         targetSdk = 35 // Updated to latest stable (API 35)
         versionCode = flutter.versionCode
         versionName = flutter.versionName

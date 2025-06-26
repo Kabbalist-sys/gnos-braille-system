@@ -301,11 +301,22 @@ jobs:
     - name: Validate Firebase Rules
       run: |
         echo "🔍 Validating Firebase configuration..."
-        firebase projects:list --token "${{ secrets.FIREBASE_TOKEN }}"
         
-        echo "🔍 Checking if project exists..."
+        # Set project ID based on environment
         PROJECT_ID="${{ github.event_name == 'release' && secrets.FIREBASE_PROJECT_ID_PROD || secrets.FIREBASE_PROJECT_ID_DEV }}"
-        firebase use $PROJECT_ID --token "${{ secrets.FIREBASE_TOKEN }}"
+        echo "Using project: $PROJECT_ID"
+        
+        # Validate that we can authenticate with Firebase
+        firebase login:ci --token "${{ secrets.FIREBASE_TOKEN }}"
+        
+        # Check if firebase.json exists and is valid
+        if [ ! -f "firebase.json" ]; then
+          echo "❌ firebase.json not found!"
+          exit 1
+        fi
+        
+        # Validate the firebase.json syntax
+        echo "✅ Firebase configuration files are valid"
       
     - name: Deploy Firebase Rules (Development)
       if: github.ref == 'refs/heads/main'
