@@ -21,23 +21,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Future<void> _loadStatistics() async {
     setState(() => _isLoading = true);
-    
     try {
       final stats = await _cloudStorageService.getUserStatistics();
+      if (!mounted) return;
       setState(() {
         _statistics = stats;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading statistics: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading statistics: [4m${e.toString()}[0m'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
