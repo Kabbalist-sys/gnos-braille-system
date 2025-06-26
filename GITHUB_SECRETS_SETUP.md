@@ -59,9 +59,9 @@ These secrets are for your production Firebase project:
 | Secret Name | Description | How to Generate |
 |-------------|-------------|-----------------|
 | `ANDROID_KEYSTORE_BASE64` | Base64 encoded keystore file | ✅ SET - Generated from my-release-key.keystore |
-| `ANDROID_KEYSTORE_PASSWORD` | Keystore password | Password you set when creating keystore |
+| `ANDROID_KEYSTORE_PASSWORD` | Keystore password | ✅ SET - Password you set when creating keystore |
 | `ANDROID_KEY_ALIAS` | Key alias name | ✅ SET - "my-key-alias" |
-| `ANDROID_KEY_PASSWORD` | Key password | Password you set for the key |
+| `ANDROID_KEY_PASSWORD` | Key password | ✅ SET - Password you set for the key |
 
 ### 🛡️ Optional Security Tools
 

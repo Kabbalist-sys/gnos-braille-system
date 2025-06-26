@@ -54,6 +54,14 @@ class FirebaseConfig {
   // Initialize Firebase with proper configuration
   static Future<void> initialize() async {
     try {
+      // Check if we're in a test environment
+      if (_isTestEnvironment()) {
+        if (kDebugMode) {
+          print('Skipping Firebase initialization in test environment');
+        }
+        return;
+      }
+      
       await Firebase.initializeApp(
         options: currentOptions,
       );
@@ -71,6 +79,16 @@ class FirebaseConfig {
         print('Firebase initialization failed: $e');
       }
       rethrow;
+    }
+  }
+  
+  // Check if we're in test environment
+  static bool _isTestEnvironment() {
+    // Check if we're running in Flutter test environment
+    try {
+      return const bool.fromEnvironment('FLUTTER_TEST', defaultValue: false);
+    } catch (e) {
+      return false;
     }
   }
   
