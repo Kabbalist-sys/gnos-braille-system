@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "504848877641",
+    "project_id": "gnos-braille-system",
+    "storage_bucket": "gnos-braille-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:504848877641:android:641db787ef0b0714e75798",
+        "android_client_info": {
+          "package_name": "com.example.gnos_braille_system"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSb1typvTNcm33A_i9Y983hekEF86Cr7Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

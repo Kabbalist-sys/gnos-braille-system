@@ -1,0 +1,362 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+  JAVA_VERSION: '17'
+  NODE_VERSION: '18'
+  
+# Security: Limit permissions for GITHUB_TOKEN
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  # Test and analyze code
+  test:
+    name: Test & Analyze
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        # Security: Limit checkout depth
+        fetch-depth: 1
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: ${{ env.JAVA_VERSION }}
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true  # Cache Flutter installation
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.pub-cache
+          ${{ runner.tool_cache }}/flutter
+        key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pub-
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Verify Flutter installation
+      run: flutter doctor -v
+      
+    - name: Check for secrets in code
+      run: |
+        echo "🔍 Scanning for potential secrets..."
+        if grep -r "AIzaSy" lib/ --include="*.dart" || grep -r "firebase.*:" lib/ --include="*.dart"; then
+          echo "❌ Potential hardcoded Firebase secrets found!"
+          exit 1
+        fi
+        echo "✅ No hardcoded secrets detected"
+      
+    - name: Run code analysis
+      run: flutter analyze --fatal-infos
+      
+    - name: Run tests
+      run: flutter test --coverage --reporter=compact
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        
+  # Build web application
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Build web app (development)
+      if: github.ref == 'refs/heads/main'
+      run: |
+        flutter build web --release \
+          --dart-define=PRODUCTION=false \
+          --dart-define=FIREBASE_API_KEY_DEV=${{ secrets.FIREBASE_API_KEY_DEV }} \
+          --dart-define=FIREBASE_AUTH_DOMAIN_DEV=${{ secrets.FIREBASE_AUTH_DOMAIN_DEV }} \
+          --dart-define=FIREBASE_PROJECT_ID_DEV=${{ secrets.FIREBASE_PROJECT_ID_DEV }} \
+          --dart-define=FIREBASE_STORAGE_BUCKET_DEV=${{ secrets.FIREBASE_STORAGE_BUCKET_DEV }} \
+          --dart-define=FIREBASE_MESSAGING_SENDER_ID_DEV=${{ secrets.FIREBASE_MESSAGING_SENDER_ID_DEV }} \
+          --dart-define=FIREBASE_APP_ID_DEV=${{ secrets.FIREBASE_APP_ID_DEV }} \
+          --dart-define=FIREBASE_MEASUREMENT_ID_DEV=${{ secrets.FIREBASE_MEASUREMENT_ID_DEV }} \
+          --dart-define=BRAILLE_API_URL_DEV=${{ secrets.BRAILLE_API_URL_DEV }}
+          
+    - name: Build web app (production)
+      if: github.event_name == 'release'
+      run: |
+        flutter build web --release \
+          --dart-define=PRODUCTION=true \
+          --dart-define=FIREBASE_API_KEY_PROD=${{ secrets.FIREBASE_API_KEY_PROD }} \
+          --dart-define=FIREBASE_AUTH_DOMAIN_PROD=${{ secrets.FIREBASE_AUTH_DOMAIN_PROD }} \
+          --dart-define=FIREBASE_PROJECT_ID_PROD=${{ secrets.FIREBASE_PROJECT_ID_PROD }} \
+          --dart-define=FIREBASE_STORAGE_BUCKET_PROD=${{ secrets.FIREBASE_STORAGE_BUCKET_PROD }} \
+          --dart-define=FIREBASE_MESSAGING_SENDER_ID_PROD=${{ secrets.FIREBASE_MESSAGING_SENDER_ID_PROD }} \
+          --dart-define=FIREBASE_APP_ID_PROD=${{ secrets.FIREBASE_APP_ID_PROD }} \
+          --dart-define=FIREBASE_MEASUREMENT_ID_PROD=${{ secrets.FIREBASE_MEASUREMENT_ID_PROD }} \
+          --dart-define=BRAILLE_API_URL_PROD=${{ secrets.BRAILLE_API_URL_PROD }}
+          
+    - name: Upload web build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: web-build
+        path: build/web/
+        retention-days: 30
+
+  # Build Android application
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: ${{ env.JAVA_VERSION }}
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Setup Android signing
+      run: |
+        # Create keystore directory with proper permissions
+        mkdir -p android/app
+        chmod 700 android/app
+        
+        # Decode and save keystore
+        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+        chmod 600 android/app/keystore.jks
+        
+        # Create key properties file
+        cat > android/key.properties << EOF
+        storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+        keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+        storeFile=keystore.jks
+        EOF
+        chmod 600 android/key.properties
+        
+        # Verify keystore
+        keytool -list -keystore android/app/keystore.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" -alias "${{ secrets.ANDROID_KEY_ALIAS }}" || exit 1
+        
+    - name: Build Android APK (development)
+      if: github.ref == 'refs/heads/main'
+      run: |
+        flutter build apk --release \
+          --dart-define=PRODUCTION=false \
+          --dart-define=FIREBASE_API_KEY_DEV=${{ secrets.FIREBASE_API_KEY_DEV }} \
+          --dart-define=FIREBASE_AUTH_DOMAIN_DEV=${{ secrets.FIREBASE_AUTH_DOMAIN_DEV }} \
+          --dart-define=FIREBASE_PROJECT_ID_DEV=${{ secrets.FIREBASE_PROJECT_ID_DEV }} \
+          --dart-define=FIREBASE_STORAGE_BUCKET_DEV=${{ secrets.FIREBASE_STORAGE_BUCKET_DEV }} \
+          --dart-define=FIREBASE_MESSAGING_SENDER_ID_DEV=${{ secrets.FIREBASE_MESSAGING_SENDER_ID_DEV }} \
+          --dart-define=FIREBASE_APP_ID_DEV=${{ secrets.FIREBASE_APP_ID_DEV }} \
+          --dart-define=FIREBASE_MEASUREMENT_ID_DEV=${{ secrets.FIREBASE_MEASUREMENT_ID_DEV }} \
+          --dart-define=BRAILLE_API_URL_DEV=${{ secrets.BRAILLE_API_URL_DEV }}
+          
+    - name: Build Android App Bundle (production)
+      if: github.event_name == 'release'
+      run: |
+        flutter build appbundle --release \
+          --dart-define=PRODUCTION=true \
+          --dart-define=FIREBASE_API_KEY_PROD=${{ secrets.FIREBASE_API_KEY_PROD }} \
+          --dart-define=FIREBASE_AUTH_DOMAIN_PROD=${{ secrets.FIREBASE_AUTH_DOMAIN_PROD }} \
+          --dart-define=FIREBASE_PROJECT_ID_PROD=${{ secrets.FIREBASE_PROJECT_ID_PROD }} \
+          --dart-define=FIREBASE_STORAGE_BUCKET_PROD=${{ secrets.FIREBASE_STORAGE_BUCKET_PROD }} \
+          --dart-define=FIREBASE_MESSAGING_SENDER_ID_PROD=${{ secrets.FIREBASE_MESSAGING_SENDER_ID_PROD }} \
+          --dart-define=FIREBASE_APP_ID_PROD=${{ secrets.FIREBASE_APP_ID_PROD }} \
+          --dart-define=FIREBASE_MEASUREMENT_ID_PROD=${{ secrets.FIREBASE_MEASUREMENT_ID_PROD }} \
+          --dart-define=BRAILLE_API_URL_PROD=${{ secrets.BRAILLE_API_URL_PROD }}
+          
+    - name: Upload Android build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-build
+        path: |
+          build/app/outputs/flutter-apk/app-release.apk
+          build/app/outputs/bundle/release/app-release.aab
+        retention-days: 30
+
+  # Deploy to Firebase Hosting
+  deploy-web:
+    name: Deploy Web to Firebase
+    runs-on: ubuntu-latest
+    needs: build-web
+    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download web build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: web-build
+        path: build/web/
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+      
+    - name: Verify Firebase authentication
+      run: |
+        firebase projects:list --token "${{ secrets.FIREBASE_TOKEN }}" >/dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "❌ Firebase authentication failed"
+          exit 1
+        fi
+        echo "✅ Firebase authentication verified"
+      
+    - name: Deploy to Firebase Hosting (Development)
+      if: github.ref == 'refs/heads/main'
+      run: |
+        firebase deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID_DEV }} --token ${{ secrets.FIREBASE_TOKEN }}
+        
+    - name: Deploy to Firebase Hosting (Production)
+      if: github.event_name == 'release'
+      run: |
+        firebase deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID_PROD }} --token ${{ secrets.FIREBASE_TOKEN }}
+
+  # Deploy Firebase Rules and Functions
+  deploy-firebase:
+    name: Deploy Firebase Rules
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+      
+    - name: Validate Firebase Rules
+      run: |
+        echo "🔍 Validating Firestore rules..."
+        firebase firestore:rules:list --project ${{ github.event_name == 'release' && secrets.FIREBASE_PROJECT_ID_PROD || secrets.FIREBASE_PROJECT_ID_DEV }} --token "${{ secrets.FIREBASE_TOKEN }}"
+        
+        echo "🔍 Validating Storage rules..."
+        firebase storage:rules:list --project ${{ github.event_name == 'release' && secrets.FIREBASE_PROJECT_ID_PROD || secrets.FIREBASE_PROJECT_ID_DEV }} --token "${{ secrets.FIREBASE_TOKEN }}"
+      
+    - name: Deploy Firebase Rules (Development)
+      if: github.ref == 'refs/heads/main'
+      run: |
+        firebase deploy --only firestore:rules,storage --project ${{ secrets.FIREBASE_PROJECT_ID_DEV }} --token ${{ secrets.FIREBASE_TOKEN }}
+        
+    - name: Deploy Firebase Rules (Production)
+      if: github.event_name == 'release'
+      run: |
+        firebase deploy --only firestore:rules,storage --project ${{ secrets.FIREBASE_PROJECT_ID_PROD }} --token ${{ secrets.FIREBASE_TOKEN }}
+
+  # Clean up and notify on deployment
+  cleanup-and-notify:
+    name: Cleanup & Notification
+    runs-on: ubuntu-latest
+    needs: [deploy-web, deploy-firebase]
+    if: always() && (github.ref == 'refs/heads/main' || github.event_name == 'release')
+    
+    steps:
+    - name: Clean up artifacts
+      run: |
+        echo "🧹 Cleaning up temporary artifacts..."
+        # Artifacts are automatically cleaned up by GitHub, but we can log this
+        
+    - name: Generate deployment summary
+      run: |
+        echo "## 📊 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:** ${{ github.event_name == 'release' && 'Production' || 'Development' }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.deploy-web.result }}" = "success" ]; then
+          echo "✅ **Web Deployment:** Successful" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Web Deployment:** Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.deploy-firebase.result }}" = "success" ]; then
+          echo "✅ **Firebase Rules:** Successful" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Firebase Rules:** Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: Notify Success
+      if: needs.deploy-web.result == 'success' && needs.deploy-firebase.result == 'success'
+      run: |
+        echo "🚀 Deployment successful!"
+        echo "Environment: ${{ github.event_name == 'release' && 'Production' || 'Development' }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Time: $(date -u)"
+        
+    - name: Notify Failure
+      if: needs.deploy-web.result == 'failure' || needs.deploy-firebase.result == 'failure'
+      run: |
+        echo "❌ Deployment failed!"
+        echo "Web deployment: ${{ needs.deploy-web.result }}"
+        echo "Firebase deployment: ${{ needs.deploy-firebase.result }}"
+        echo "Please check the logs and fix the issues."
+        echo "Time: $(date -u)"
+        exit 1

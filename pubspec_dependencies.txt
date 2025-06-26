@@ -1,0 +1,25 @@
+# Add the following dependencies for the Dot Hull Accessible App
+
+# Camera for image capture
+camera: ^0.10.5+2
+
+# Google ML Kit for OCR
+google_ml_kit: ^0.16.2
+
+# Speech to text for voice commands
+speech_to_text: ^6.6.0
+
+# Text to speech for audio output
+flutter_tts: ^4.0.2
+
+# Translator for text translation
+translator: ^0.1.7
+
+# Vibration for haptic feedback
+vibration: ^1.7.4
+
+# Accessibility tools (screen reader integration)
+flutter_screen_reader: ^0.0.2
+
+# (Optional) OpenCV for advanced image processing
+opencv_4: ^1.0.0

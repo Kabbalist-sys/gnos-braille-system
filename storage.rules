@@ -1,0 +1,52 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // User profile images
+    match /users/{userId}/profile/{imageId} {
+      allow read: if request.auth != null;
+      allow write, delete: if request.auth != null 
+        && request.auth.uid == userId
+        && isValidImageFile();
+    }
+    
+    // Translation exports (user-specific)
+    match /exports/{userId}/{exportId} {
+      allow read, write, delete: if request.auth != null 
+        && request.auth.uid == userId
+        && isValidExportFile();
+    }
+    
+    // Temporary uploads (auto-cleanup after 24h)
+    match /temp/{userId}/{fileId} {
+      allow read, write, delete: if request.auth != null 
+        && request.auth.uid == userId
+        && isValidTempFile();
+    }
+    
+    // Public assets (read-only)
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if false; // Only admins can upload public assets
+    }
+    
+    // Validation functions
+    function isValidImageFile() {
+      return resource.contentType.matches('image/.*') &&
+             resource.size < 5 * 1024 * 1024; // Max 5MB
+    }
+    
+    function isValidExportFile() {
+      return resource.contentType in ['text/csv', 'application/json'] &&
+             resource.size < 50 * 1024 * 1024; // Max 50MB
+    }
+    
+    function isValidTempFile() {
+      return resource.size < 10 * 1024 * 1024; // Max 10MB
+    }
+    
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

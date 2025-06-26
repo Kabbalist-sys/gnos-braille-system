@@ -1,0 +1,25 @@
+<svg width="300" height="400" viewBox="0 0 300 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tree trunk -->
+  <rect x="140" y="200" width="20" height="100" fill="#8B5C2A"/>
+  <!-- Tree branches (stylized) -->
+  <path d="M150 200 Q120 170 100 120" stroke="#4A8B2A" stroke-width="8" fill="none"/>
+  <path d="M150 200 Q180 170 200 120" stroke="#4A8B2A" stroke-width="8" fill="none"/>
+  <path d="M150 220 Q110 210 80 180" stroke="#4A8B2A" stroke-width="6" fill="none"/>
+  <path d="M150 220 Q190 210 220 180" stroke="#4A8B2A" stroke-width="6" fill="none"/>
+  <!-- Tree leaves (top) -->
+  <ellipse cx="150" cy="100" rx="60" ry="40" fill="#4A8B2A" opacity="0.7"/>
+  <!-- Third eye (centered in leaves) -->
+  <ellipse cx="150" cy="100" rx="22" ry="12" fill="#fff" stroke="#222" stroke-width="2"/>
+  <circle cx="150" cy="100" r="6" fill="#4A90E2" stroke="#222" stroke-width="2"/>
+  <!-- Rising serpent (spiral around trunk) -->
+  <path d="M150 300
+           Q170 290 150 280
+           Q130 270 150 260
+           Q170 250 150 240
+           Q130 230 150 220" 
+        stroke="#B8860B" stroke-width="6" fill="none"/>
+  <!-- Serpent head -->
+  <ellipse cx="150" cy="215" rx="8" ry="5" fill="#B8860B" stroke="#222" stroke-width="1"/>
+  <circle cx="153" cy="215" r="1" fill="#222"/>
+  <circle cx="147" cy="215" r="1" fill="#222"/>
+</svg>

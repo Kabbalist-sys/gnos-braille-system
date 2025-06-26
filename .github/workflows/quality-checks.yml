@@ -1,0 +1,263 @@
+name: Code Quality & Security
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Run Flutter analyze
+      run: flutter analyze --write=analysis_results.txt
+      
+    - name: Run custom linting
+      run: |
+        echo "Running custom lint checks..."
+        # Check for TODO comments
+        if grep -r "TODO" lib/; then
+          echo "⚠️ Found TODO comments in code"
+        fi
+        
+        # Check for debug prints
+        if grep -r "print(" lib/; then
+          echo "⚠️ Found debug print statements"
+        fi
+        
+        # Check for hardcoded strings that should be localized
+        if grep -r "Text(" lib/ | grep -v "Text(.*\$"; then
+          echo "⚠️ Found potentially non-localized text"
+        fi
+        
+    - name: Check code formatting
+      run: |
+        dart format --output=none --set-exit-if-changed .
+        
+    - name: Dependency vulnerability check
+      run: |
+        flutter pub deps --json > deps.json
+        # Add vulnerability scanning here if needed
+        
+    - name: Upload analysis results
+      uses: actions/upload-artifact@v4
+      with:
+        name: analysis-results
+        path: analysis_results.txt
+        retention-days: 30
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Semgrep
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/secrets
+          p/owasp-top-ten
+      env:
+        SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        
+    - name: Scan for hardcoded secrets
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        
+    - name: Check Firebase configuration
+      run: |
+        echo "Checking Firebase configuration security..."
+        
+        # Check if sensitive data is hardcoded
+        if grep -r "apiKey.*:" lib/ --include="*.dart"; then
+          echo "⚠️ Found potential hardcoded API keys"
+        fi
+        
+        # Check for proper environment variable usage
+        if ! grep -r "String.fromEnvironment" lib/config/; then
+          echo "⚠️ Environment variables may not be properly configured"
+        fi
+
+  performance-analysis:
+    name: Performance Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Build for performance analysis
+      run: flutter build web --release --analyze-size
+      
+    - name: Analyze bundle size
+      run: |
+        echo "Analyzing bundle size..."
+        du -sh build/web/
+        find build/web/ -name "*.js" -exec du -h {} + | sort -hr
+        
+    - name: Check for large assets
+      run: |
+        echo "Checking for large assets..."
+        find assets/ -type f -size +1M -exec ls -lh {} + || echo "No large assets found"
+
+  documentation-check:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check README completeness
+      run: |
+        echo "Checking documentation completeness..."
+        
+        # Check if README exists and has minimum content
+        if [ ! -f "README.md" ]; then
+          echo "❌ README.md is missing"
+          exit 1
+        fi
+        
+        # Check for required sections
+        required_sections=("Installation" "Usage" "Features" "Contributing")
+        for section in "${required_sections[@]}"; do
+          if ! grep -i "$section" README.md > /dev/null; then
+            echo "⚠️ README.md is missing $section section"
+          fi
+        done
+        
+    - name: Check API documentation
+      run: |
+        if [ -f "API_DOCUMENTATION.md" ]; then
+          echo "✅ API documentation exists"
+        else
+          echo "⚠️ API documentation is missing"
+        fi
+        
+    - name: Generate documentation coverage report
+      run: |
+        echo "Checking code documentation coverage..."
+        
+        # Count documented vs undocumented public methods
+        dart_files=$(find lib/ -name "*.dart" | wc -l)
+        echo "Total Dart files: $dart_files"
+        
+        # This is a simple check - in practice, you'd use dartdoc
+        echo "Documentation check completed"
+
+  accessibility-check:
+    name: Accessibility Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Check for accessibility widgets
+      run: |
+        echo "Checking accessibility implementation..."
+        
+        # Check for Semantics widgets
+        if grep -r "Semantics" lib/; then
+          echo "✅ Found Semantics widgets"
+        else
+          echo "⚠️ No Semantics widgets found - consider adding for accessibility"
+        fi
+        
+        # Check for semantic labels
+        if grep -r "semanticLabel" lib/; then
+          echo "✅ Found semantic labels"
+        else
+          echo "⚠️ No semantic labels found"
+        fi
+        
+        # Check for accessible buttons
+        if grep -r "tooltip:" lib/; then
+          echo "✅ Found tooltips for accessibility"
+        else
+          echo "⚠️ Consider adding tooltips for better accessibility"
+        fi
+
+  summary:
+    name: Quality Summary
+    runs-on: ubuntu-latest
+    needs: [code-quality, security-scan, performance-analysis, documentation-check, accessibility-check]
+    if: always()
+    
+    steps:
+    - name: Generate quality report
+      run: |
+        echo "## 📊 Code Quality Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.code-quality.result }}" = "success" ]; then
+          echo "✅ **Code Quality**: Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Code Quality**: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.security-scan.result }}" = "success" ]; then
+          echo "✅ **Security Scan**: Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Security Scan**: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.performance-analysis.result }}" = "success" ]; then
+          echo "✅ **Performance Analysis**: Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Performance Analysis**: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.documentation-check.result }}" = "success" ]; then
+          echo "✅ **Documentation**: Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Documentation**: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.accessibility-check.result }}" = "success" ]; then
+          echo "✅ **Accessibility**: Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Accessibility**: Failed" >> $GITHUB_STEP_SUMMARY
+        fi

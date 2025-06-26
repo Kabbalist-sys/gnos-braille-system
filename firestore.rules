@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow user creation during registration
+      allow create: if request.auth != null 
+        && request.auth.uid == userId
+        && validateUserData(resource);
+    }
+    
+    // Translations collection - users can only access their own translations
+    match /translations/{translationId} {
+      allow read, write, delete: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+      
+      // Allow creation of new translations
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId
+        && validateTranslationData(request.resource);
+    }
+    
+    // System collections (read-only for authenticated users)
+    match /system/{document} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only server can write system data
+    }
+    
+    // Analytics collection (read-only aggregated data)
+    match /analytics/{document} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only server can write analytics
+    }
+    
+    // Helper functions for data validation
+    function validateUserData(data) {
+      return data.data.keys().hasAll(['uid', 'email', 'displayName', 'createdAt']) &&
+             data.data.uid is string &&
+             data.data.email is string &&
+             data.data.displayName is string &&
+             data.data.createdAt is timestamp;
+    }
+    
+    function validateTranslationData(data) {
+      return data.data.keys().hasAll(['originalText', 'translatedText', 'userId', 'timestamp']) &&
+             data.data.originalText is string &&
+             data.data.translatedText is string &&
+             data.data.userId is string &&
+             data.data.timestamp is timestamp &&
+             data.data.originalText.size() <= 10000 && // Max 10k characters
+             data.data.translatedText.size() <= 20000; // Max 20k characters for Braille
+    }
+    
+    // Admin functions (restricted to admin users)
+    match /admin/{document} {
+      allow read, write: if request.auth != null 
+        && request.auth.token.admin == true;
+    }
+    
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
