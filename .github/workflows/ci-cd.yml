@@ -251,7 +251,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+        # No cache needed since we're only installing Firebase CLI globally
         
     - name: Install Firebase CLI
       run: npm install -g firebase-tools
@@ -290,7 +290,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+        # No cache needed since we're only installing Firebase CLI globally
         
     - name: Install Firebase CLI
       run: npm install -g firebase-tools
