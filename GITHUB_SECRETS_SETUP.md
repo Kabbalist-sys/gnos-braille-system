@@ -52,15 +52,15 @@ These secrets are for your production Firebase project:
 
 | Secret Name | Description | How to Get |
 |-------------|-------------|------------|
-| `FIREBASE_TOKEN` | Firebase CI Token | Run `firebase login:ci` in terminal |
+| `FIREBASE_TOKEN` | Firebase CI Token | Run `firebase login:ci` in terminal | 1//091luka1zLQsgCgYIARAAGAkSNgF-L9Ire42HibdOv8AFqVNnWi1n9kOdaq_57EgwKtygTlxb7rwFUih6EC3cBpcnsQyNanj3Mw
 
 ### 📱 Android App Signing
 
 | Secret Name | Description | How to Generate |
 |-------------|-------------|-----------------|
-| `ANDROID_KEYSTORE_BASE64` | Base64 encoded keystore file | See Android Keystore Setup below |
+| `ANDROID_KEYSTORE_BASE64` | Base64 encoded keystore file | ✅ SET - Generated from my-release-key.keystore |
 | `ANDROID_KEYSTORE_PASSWORD` | Keystore password | Password you set when creating keystore |
-| `ANDROID_KEY_ALIAS` | Key alias name | Alias you set when creating keystore |
+| `ANDROID_KEY_ALIAS` | Key alias name | ✅ SET - "my-key-alias" |
 | `ANDROID_KEY_PASSWORD` | Key password | Password you set for the key |
 
 ### 🛡️ Optional Security Tools
