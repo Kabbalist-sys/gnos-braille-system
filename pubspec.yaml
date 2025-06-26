@@ -47,7 +47,7 @@ dependencies:
   firebase_analytics: ^11.3.8
   firebase_crashlytics: ^4.1.8
   firebase_performance: ^0.10.0+8
-  google_sign_in: ^6.2.1
+  google_sign_in: ^7.0.0
   
   # HTTP client for API integration
   http: ^1.2.2
