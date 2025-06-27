@@ -35,7 +35,7 @@ jobs:
         python -m pytest --cov=braille_api --cov-report=xml
         
     - name: Upload coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: ./coverage.xml
 
