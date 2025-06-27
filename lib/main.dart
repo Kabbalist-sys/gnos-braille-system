@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -571,18 +573,51 @@ class _BrailleScreenState extends State<BrailleScreen> {
   List<dynamic> _standards = [];
   List<dynamic> _languages = [];
   String? _apiStatus;
+  List<TranslationRecord> _translationHistory = [];
+  bool _realTimeTranslation = false;
+  String? _connectionError;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
     super.initState();
     _checkApiHealth();
     _loadSupportedOptions();
+    _loadTranslationHistory();
+    _inputController.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _inputController.removeListener(_onTextChanged);
+    _inputController.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    if (_realTimeTranslation && _inputController.text.isNotEmpty) {
+      _debounceTimer?.cancel();
+      _debounceTimer = Timer(const Duration(milliseconds: 800), () {
+        _translateText();
+      });
+    }
   }
 
   Future<void> _checkApiHealth() async {
+    setState(() {
+      _connectionError = null;
+    });
+
     final health = await BrailleApiService.healthCheck();
     setState(() {
-      _apiStatus = health['status'] == 'healthy' ? 'Connected' : 'Disconnected';
+      if (health['connected'] == true) {
+        _apiStatus = 'Connected';
+        _connectionError = null;
+      } else {
+        _apiStatus = 'Disconnected';
+        _connectionError = health['error'];
+      }
     });
   }
 
@@ -591,9 +626,38 @@ class _BrailleScreenState extends State<BrailleScreen> {
     final languagesResponse = await BrailleApiService.getSupportedLanguages();
 
     setState(() {
-      _standards = standardsResponse['standards'] ?? [];
-      _languages = languagesResponse['languages'] ?? [];
+      if (standardsResponse['success'] == true) {
+        _standards = standardsResponse['standards'];
+      } else {
+        _standards = [
+          {'code': 'grade1', 'name': 'Grade 1 (Uncontracted)'},
+          {'code': 'grade2', 'name': 'Grade 2 (Contracted)'},
+        ];
+      }
+
+      if (languagesResponse['success'] == true) {
+        _languages = languagesResponse['languages'];
+      } else {
+        _languages = [
+          {'code': 'en', 'name': 'English'},
+          {'code': 'es', 'name': 'Spanish'},
+          {'code': 'fr', 'name': 'French'},
+        ];
+      }
     });
+  }
+
+  Future<void> _loadTranslationHistory() async {
+    try {
+      // Listen to the stream and get the first value
+      _cloudStorageService.getTranslationHistory(limit: 10).listen((history) {
+        setState(() {
+          _translationHistory = history;
+        });
+      });
+    } catch (e) {
+      debugPrint('Failed to load translation history: $e');
+    }
   }
 
   Future<void> _saveTranslation(
@@ -612,16 +676,15 @@ class _BrailleScreenState extends State<BrailleScreen> {
       );
 
       await _cloudStorageService.saveTranslation(translationRecord);
+      _loadTranslationHistory(); // Refresh history
     } catch (e) {
-      // Handle error silently or show a subtle notification
       debugPrint('Failed to save translation: $e');
     }
   }
 
   Future<void> _translateText() async {
-    setState(() => _isLoading = true);
-    final input = _inputController.text;
-
+    final input = _inputController.text.trim();
+    
     if (input.isEmpty) {
       setState(() {
         _brailleResult = null;
@@ -630,6 +693,8 @@ class _BrailleScreenState extends State<BrailleScreen> {
       });
       return;
     }
+
+    setState(() => _isLoading = true);
 
     try {
       final result = await BrailleApiService.translateText(
@@ -645,22 +710,70 @@ class _BrailleScreenState extends State<BrailleScreen> {
         if (result['success'] == true) {
           _brailleResult = result['result'];
           _metadata = result['metadata'];
+          _connectionError = null;
 
           // Save translation to cloud storage
           _saveTranslation(input, _brailleResult!);
         } else {
-          _brailleResult = 'Error: ${result['error']}';
+          _brailleResult = null;
+          _connectionError = result['error'];
           _metadata = null;
         }
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        _brailleResult = 'Connection Error: $e';
+        _brailleResult = null;
+        _connectionError = 'Unexpected error: $e';
         _isLoading = false;
         _metadata = null;
       });
     }
+  }
+
+  void _copyToClipboard(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Copied to clipboard!'),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _shareResult() {
+    if (_brailleResult != null) {
+      final shareText = 'Original: ${_inputController.text}\nBraille: $_brailleResult';
+      // For now, just copy to clipboard since share_plus isn't available
+      _copyToClipboard(shareText);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Translation copied to clipboard!'),
+          backgroundColor: Colors.blue,
+        ),
+      );
+    }
+  }
+
+  void _clearAll() {
+    setState(() {
+      _inputController.clear();
+      _brailleResult = null;
+      _metadata = null;
+      _connectionError = null;
+    });
+  }
+
+  void _loadHistoryItem(TranslationRecord record) {
+    setState(() {
+      _inputController.text = record.originalText;
+      _brailleResult = record.translatedText;
+      _isReverse = record.isReverse;
+      _selectedStandard = record.standard;
+      _selectedLanguage = record.language;
+      _metadata = record.metadata;
+    });
   }
 
   @override
@@ -670,6 +783,18 @@ class _BrailleScreenState extends State<BrailleScreen> {
         title: Text('Advanced Braille Translator'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: _checkApiHealth,
+            tooltip: 'Refresh connection',
+          ),
+          IconButton(
+            icon: Icon(Icons.clear_all),
+            onPressed: _clearAll,
+            tooltip: 'Clear all',
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -678,21 +803,60 @@ class _BrailleScreenState extends State<BrailleScreen> {
           children: [
             // API Status Card
             Card(
-              color:
-                  _apiStatus == 'Connected' ? Colors.green[50] : Colors.red[50],
+              color: _apiStatus == 'Connected' ? Colors.green[50] : Colors.red[50],
+              elevation: 2,
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _apiStatus == 'Connected' ? Icons.check_circle : Icons.error,
+                          color: _apiStatus == 'Connected' ? Colors.green : Colors.red,
+                        ),
+                        SizedBox(width: 8),
+                        Text('API Status: ${_apiStatus ?? "Checking..."}'),
+                        Spacer(),
+                        IconButton(
+                          icon: Icon(Icons.refresh, size: 20),
+                          onPressed: _checkApiHealth,
+                          tooltip: 'Refresh connection',
+                        ),
+                      ],
+                    ),
+                    if (_connectionError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          _connectionError!,
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Real-time translation toggle
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
-                    Icon(
-                      _apiStatus == 'Connected'
-                          ? Icons.check_circle
-                          : Icons.error,
-                      color:
-                          _apiStatus == 'Connected' ? Colors.green : Colors.red,
-                    ),
+                    Icon(Icons.flash_on, color: Colors.orange),
                     SizedBox(width: 8),
-                    Text('API Status: ${_apiStatus ?? "Checking..."}'),
+                    Text('Real-time Translation', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Spacer(),
+                    Switch(
+                      value: _realTimeTranslation,
+                      onChanged: (value) {
+                        setState(() {
+                          _realTimeTranslation = value;
+                        });
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -705,8 +869,7 @@ class _BrailleScreenState extends State<BrailleScreen> {
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
-                    Text('Translation Mode:',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Translation Mode:', style: TextStyle(fontWeight: FontWeight.bold)),
                     Spacer(),
                     Text('Text → Braille'),
                     Switch(
@@ -717,6 +880,7 @@ class _BrailleScreenState extends State<BrailleScreen> {
                           _inputController.clear();
                           _brailleResult = null;
                           _metadata = null;
+                          _connectionError = null;
                         });
                       },
                     ),
@@ -737,13 +901,11 @@ class _BrailleScreenState extends State<BrailleScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Standard',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('Standard', style: TextStyle(fontWeight: FontWeight.bold)),
                           DropdownButton<String>(
                             value: _selectedStandard,
                             isExpanded: true,
-                            items: _standards
-                                .map<DropdownMenuItem<String>>((standard) {
+                            items: _standards.map<DropdownMenuItem<String>>((standard) {
                               return DropdownMenuItem<String>(
                                 value: standard['code'],
                                 child: Text(standard['name']),
@@ -768,13 +930,11 @@ class _BrailleScreenState extends State<BrailleScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Language',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('Language', style: TextStyle(fontWeight: FontWeight.bold)),
                           DropdownButton<String>(
                             value: _selectedLanguage,
                             isExpanded: true,
-                            items: _languages
-                                .map<DropdownMenuItem<String>>((language) {
+                            items: _languages.map<DropdownMenuItem<String>>((language) {
                               return DropdownMenuItem<String>(
                                 value: language['code'],
                                 child: Text(language['name']),
@@ -795,7 +955,7 @@ class _BrailleScreenState extends State<BrailleScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Input Field
+            // Input Field with enhanced features
             TextField(
               controller: _inputController,
               decoration: InputDecoration(
@@ -805,6 +965,19 @@ class _BrailleScreenState extends State<BrailleScreen> {
                 border: OutlineInputBorder(),
                 filled: true,
                 fillColor: Colors.grey[50],
+                suffixIcon: _inputController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear),
+                        onPressed: () {
+                          _inputController.clear();
+                          setState(() {
+                            _brailleResult = null;
+                            _metadata = null;
+                            _connectionError = null;
+                          });
+                        },
+                      )
+                    : null,
               ),
               minLines: 2,
               maxLines: 4,
@@ -831,6 +1004,40 @@ class _BrailleScreenState extends State<BrailleScreen> {
             // Loading Indicator
             if (_isLoading) Center(child: CircularProgressIndicator()),
 
+            // Error Display
+            if (_connectionError != null && !_isLoading)
+              Card(
+                color: Colors.red[50],
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.error, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Translation Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Text(_connectionError!, style: TextStyle(color: Colors.red[800])),
+                      SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.refresh),
+                        label: Text('Retry'),
+                        onPressed: _translateText,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             // Result Display
             if (_brailleResult != null && !_isLoading)
               Card(
@@ -841,13 +1048,28 @@ class _BrailleScreenState extends State<BrailleScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Translation Result:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.indigo[700],
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Translation Result:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.indigo[700],
+                            ),
+                          ),
+                          Spacer(),
+                          IconButton(
+                            icon: Icon(Icons.copy),
+                            onPressed: () => _copyToClipboard(_brailleResult!),
+                            tooltip: 'Copy result',
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.share),
+                            onPressed: _shareResult,
+                            tooltip: 'Share translation',
+                          ),
+                        ],
                       ),
                       SizedBox(height: 12),
                       SelectableText(
@@ -869,13 +1091,10 @@ class _BrailleScreenState extends State<BrailleScreen> {
                           ),
                         ),
                         SizedBox(height: 8),
-                        _buildMetadataRow('Method',
-                            _metadata!['translation_method'] ?? 'Unknown'),
-                        _buildMetadataRow(
-                            'Characters', '${_inputController.text.length}'),
+                        _buildMetadataRow('Method', _metadata!['translation_method'] ?? 'Unknown'),
+                        _buildMetadataRow('Characters', '${_inputController.text.length}'),
                         if (_metadata!['compression_ratio'] != null)
-                          _buildMetadataRow('Compression',
-                              '${_metadata!['compression_ratio']}x'),
+                          _buildMetadataRow('Compression', '${_metadata!['compression_ratio']}x'),
                         if (_metadata!['contractions_used'] == true)
                           _buildMetadataRow('Contractions', 'Used'),
                       ],
@@ -883,12 +1102,43 @@ class _BrailleScreenState extends State<BrailleScreen> {
                   ),
                 ),
               ),
+
+            // Translation History
+            if (_translationHistory.isNotEmpty) ...[
+              SizedBox(height: 24),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Recent Translations',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      SizedBox(height: 12),
+                      ...(_translationHistory.take(3).map((record) => ListTile(
+                        title: Text(
+                          record.originalText.length > 30
+                              ? '${record.originalText.substring(0, 30)}...'
+                              : record.originalText,
+                        ),
+                        subtitle: Text(
+                          '${record.isReverse ? "Braille → Text" : "Text → Braille"} • ${record.timestamp.toString().substring(0, 16)}',
+                        ),
+                        trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () => _loadHistoryItem(record),
+                      ))),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
-
   Widget _buildMetadataRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),

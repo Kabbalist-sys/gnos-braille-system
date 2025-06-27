@@ -62,10 +62,20 @@ void main() {
 
     test('should validate configuration', () {
       // This test ensures the validateConfig method works
-      final isValid = EnvironmentConfig.validateConfig();
+      // Use suppressOutput to avoid error messages in test output
+      final isValid = EnvironmentConfig.validateConfig(suppressOutput: true);
       expect(isValid, isA<bool>());
-      // In development with default values, this might be false
-      // which is expected behavior
+      
+      // In development/test environment with default placeholder values,
+      // validation is expected to return false, which is correct behavior
+      if (EnvironmentConfig.isDevelopment) {
+        // In development mode, configuration might be invalid due to placeholder values
+        // This is expected and acceptable for testing
+        expect(isValid, isA<bool>()); // Just ensure it returns a boolean
+      } else {
+        // In production, configuration should be valid
+        expect(isValid, isTrue);
+      }
     });
 
     test('should have valid email format for support email', () {

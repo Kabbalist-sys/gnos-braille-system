@@ -336,7 +336,7 @@ class EnvironmentConfig {
   }
   
   /// Validate configuration
-  static bool validateConfig() {
+  static bool validateConfig({bool suppressOutput = false}) {
     final requiredFields = <String, String>{
       'Firebase API Key': firebaseApiKey,
       'Firebase Project ID': firebaseProjectId,
@@ -347,7 +347,8 @@ class EnvironmentConfig {
     bool isValid = true;
     for (final entry in requiredFields.entries) {
       if (entry.value.isEmpty || entry.value.contains('your_') || entry.value.contains('here')) {
-        if (kDebugMode) {
+        // Only print validation errors when not suppressed and in debug mode
+        if (!suppressOutput && kDebugMode) {
           debugPrint('❌ Missing or invalid configuration: ${entry.key}');
         }
         isValid = false;
