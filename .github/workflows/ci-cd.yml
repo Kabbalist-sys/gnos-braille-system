@@ -306,16 +306,24 @@ jobs:
         PROJECT_ID="${{ github.event_name == 'release' && secrets.FIREBASE_PROJECT_ID_PROD || secrets.FIREBASE_PROJECT_ID_DEV }}"
         echo "Using project: $PROJECT_ID"
         
-        # Validate that we can authenticate with Firebase
-        firebase login:ci --token "${{ secrets.FIREBASE_TOKEN }}"
-        
         # Check if firebase.json exists and is valid
         if [ ! -f "firebase.json" ]; then
           echo "❌ firebase.json not found!"
           exit 1
         fi
         
-        # Validate the firebase.json syntax
+        # Validate the firebase.json syntax using node
+        node -e "JSON.parse(require('fs').readFileSync('firebase.json', 'utf8'))" || {
+          echo "❌ firebase.json is not valid JSON!"
+          exit 1
+        }
+        
+        # Test Firebase authentication by listing projects (this works with token)
+        firebase projects:list --token "${{ secrets.FIREBASE_TOKEN }}" >/dev/null 2>&1 || {
+          echo "❌ Firebase authentication failed!"
+          exit 1
+        }
+        
         echo "✅ Firebase configuration files are valid"
       
     - name: Deploy Firebase Rules (Development)
