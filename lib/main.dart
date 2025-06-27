@@ -6,6 +6,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:translator/translator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'config/firebase_config.dart';
+import 'config/environment_config.dart';
 import 'services/braille_api_service.dart';
 import 'services/auth_service.dart';
 import 'services/cloud_storage_service.dart';
@@ -22,6 +23,16 @@ import 'widgets/app_drawer.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Print environment configuration in debug mode
+  EnvironmentConfig.printConfig();
+  
+  // Validate environment configuration
+  if (!EnvironmentConfig.validateConfig()) {
+    if (EnvironmentConfig.enableDebugLogging) {
+      debugPrint('⚠️  Warning: Some environment configurations are missing or invalid');
+    }
+  }
+
   // Initialize Firebase with production-ready configuration
   await FirebaseConfig.initialize();
 
@@ -34,11 +45,12 @@ class DotHullAccessibleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Dot Hull Accessible App',
+      title: 'Gnos Braille System - ${EnvironmentConfig.environment}',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      debugShowCheckedModeBanner: !EnvironmentConfig.isProduction,
       initialRoute: '/login',
       routes: {
         '/': (context) => AuthWrapper(child: HomeScreen()),

@@ -322,16 +322,16 @@ class EnvironmentConfig {
   /// Print current configuration (for debugging)
   static void printConfig() {
     if (kDebugMode) {
-      print('🔧 Environment Configuration:');
-      print('   Environment: $environment');
-      print('   Debug Mode: $kDebugMode');
-      print('   Firebase Project: $firebaseProjectId');
-      print('   API URL: $brailleApiUrl');
-      print('   Analytics: $enableAnalytics');
-      print('   Debug Logging: $enableDebugLogging');
-      print('   2FA Enforced: $enforce2FA');
-      print('   Max Translation Length: $maxTranslationLength');
-      print('   Support Email: $supportEmail');
+      debugPrint('🔧 Environment Configuration:');
+      debugPrint('   Environment: $environment');
+      debugPrint('   Debug Mode: $kDebugMode');
+      debugPrint('   Firebase Project: $firebaseProjectId');
+      debugPrint('   API URL: $brailleApiUrl');
+      debugPrint('   Analytics: $enableAnalytics');
+      debugPrint('   Debug Logging: $enableDebugLogging');
+      debugPrint('   2FA Enforced: $enforce2FA');
+      debugPrint('   Max Translation Length: $maxTranslationLength');
+      debugPrint('   Support Email: $supportEmail');
     }
   }
   
@@ -348,7 +348,7 @@ class EnvironmentConfig {
     for (final entry in requiredFields.entries) {
       if (entry.value.isEmpty || entry.value.contains('your_') || entry.value.contains('here')) {
         if (kDebugMode) {
-          print('❌ Missing or invalid configuration: ${entry.key}');
+          debugPrint('❌ Missing or invalid configuration: ${entry.key}');
         }
         isValid = false;
       }
